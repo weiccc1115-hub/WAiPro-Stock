@@ -85,7 +85,7 @@
                         <h1 class="text-base sm:text-xl font-bold bg-gradient-to-r from-white via-slate-200 to-emerald-400 bg-clip-text text-transparent">
                             WAiPro 股票進退場點量化分析系統
                         </h1>
-                        <p id="headerSubtext" class="text-[10px] sm:text-xs text-slate-400"><span id="headerDaysText">365</span>天三大法人籌碼連動 · 12大演算法迭代共識驗證 (勝率 ≥ <span id="headerMinWinRateText">75</span>%)</p>
+                        <p id="headerSubtext" class="text-[10px] sm:text-xs text-slate-400"><span id="headerDaysText">365</span>天三大法人籌碼連動 · 12大演算法全評比最佳解 (勝率 ≥ <span id="headerMinWinRateText">75</span>%)</p>
                     </div>
                 </div>
 
@@ -177,6 +177,8 @@
                             <span class="text-xs text-purple-400 font-bold whitespace-nowrap mr-1.5">🧠 策略:</span>
                             <select id="strategySelect" class="w-full bg-transparent text-purple-300 text-xs font-semibold focus:outline-none cursor-pointer font-mono truncate">
                                 <option value="auto" class="bg-slate-900 text-emerald-400 font-bold">🤖 自動最佳勝率 (三大法人)</option>
+                                <option value="auto_max_trades" class="bg-slate-900 text-cyan-400 font-bold">⚡ 自動最多勝敗次數 (三大法人)</option>
+                                <option value="auto_max_return" class="bg-slate-900 text-amber-400 font-bold">🚀 自動歷史量化交易績效最佳 (三大法人)</option>
                                 <option value="algo_rsi_oversold" class="bg-slate-900 text-slate-200">1. RSI(14) 超賣 + 法人籌碼回補</option>
                                 <option value="algo_bb_bounce" class="bg-slate-900 text-slate-200">2. 布林下軌觸底 + 外資抄底卡位</option>
                                 <option value="algo_ema_golden_cross" class="bg-slate-900 text-slate-200">3. EMA 20/50 金叉 + 法人順勢鎖碼</option>
@@ -232,11 +234,11 @@
                     </div>
                     <div>
                         <h3 id="algoStatusTitle" class="text-sm font-bold text-slate-100">演算法篩選與三大法人籌碼驗證狀態</h3>
-                        <p id="algoStatusDesc" class="text-xs text-slate-400 mt-0.5">系統正依序測試 12 種量化策略，尋求勝率 ≥75% 之最佳組合...</p>
+                        <p id="algoStatusDesc" class="text-xs text-slate-400 mt-0.5">系統正進行全 12 種量化策略之回測，尋求勝率 ≥75% 且歷史總績效最佳組合...</p>
                     </div>
                 </div>
                 <div id="algoAttemptBadge" class="px-3 py-1 bg-slate-800 rounded-full text-xs font-mono text-slate-300 border border-slate-700">
-                    測試進度：12/12 策略
+                    評估進度：12/12 策略全數完測
                 </div>
             </div>
         </section>
@@ -404,7 +406,6 @@
                     </div>
                 </div>
 
-                <!-- FEATURE 2: 使用者選擇策略算出的「未來五天內每天漲跌」展示區塊 -->
                 <div class="p-3.5 bg-slate-950 border border-slate-800 rounded-xl space-y-2.5">
                     <div class="flex items-center justify-between border-b border-slate-800/80 pb-2">
                         <span class="text-xs font-bold text-cyan-400 flex items-center gap-1.5">
@@ -1243,36 +1244,40 @@
                         `成交價採當日 High-Low 範圍之 EMA 20 均線位`,
                         `勝條件 > ${tpPct}% / 敗條件 -${slPct}%`
                     ],
-                    entryCondition: (c) => c.low >= c.ema50 && c.high > c.ema20 && c.rsi > 48 && c.instTotal > 0,
+                    entryCondition: (c) => c.rsi > 50 && c.high > c.ema20 && c.low >= c.ema50 && c.instTotal > 0,
                     getEntryPrice: (c) => Math.min(c.high, Math.max(c.low, c.ema20))
                 },
                 {
                     id: 'algo_triple_screen',
-                    name: '三重濾網共振 + 法人多頭排列策略',
+                    name: '三重濾網共振 + 法人多頭排列模型',
                     rulesText: [
-                        `長線 EMA 50 向上 + 中線 High/Low 超賣回升 + 短線 KD 金叉`,
-                        `當日 High/Low 完整穿透並確認三重趨勢線`,
-                        `三大法人籌碼同步加碼共振，大幅過濾假突破`,
-                        `買進價成交於當日 High-Low 區間內之均線扣抵位`,
-                        `達標 > ${tpPct}% 停利獲利結算，破 -${slPct}% 止損`
+                        `EMA 20 與 EMA 50 呈現多頭排列`,
+                        `RSI(14) 回檔至 40~55 區間蓄勢`,
+                        `三大法人買超連 2 日增長`,
+                        `成交價位鎖定於當日 High-Low 範圍之 EMA 20 均線`,
+                        `勝條件 > ${tpPct}% / 敗條件 -${slPct}%`
                     ],
-                    entryCondition: (c, prev) => c.high >= c.ema50 && c.rsi > 40 && c.stochK > c.stochD && prev.stochK <= prev.stochD && c.instTotal > 0,
-                    getEntryPrice: (c) => Math.min(c.high, Math.max(c.low, (c.ema20 + c.ema50) / 2))
+                    entryCondition: (c) => c.ema20 > c.ema50 && c.rsi >= 40 && c.rsi <= 55 && c.instTotal > 0,
+                    getEntryPrice: (c) => Math.min(c.high, Math.max(c.low, c.ema20))
                 }
             ];
         }
 
+        // 核心更新：自動測試全數 12 種策略並依「最佳勝率」、「最多勝敗次數」或「最佳歷史績效」挑選最佳模型
         function runSequentialMultiAlgoBacktest(candles, tpPct = 15, slPct = 10, selectedAlgoId = 'auto', minWinRate = 75) {
             const tpMultiplier = 1 + (tpPct / 100);
             const slMultiplier = 1 - (slPct / 100);
 
             const ALGORITHMS = getSystemAlgorithms(tpPct, slPct);
 
-            const targetAlgos = selectedAlgoId === 'auto'
+            const isAutoMode = selectedAlgoId === 'auto' || selectedAlgoId === 'auto_max_trades' || selectedAlgoId === 'auto_max_return';
+
+            const targetAlgos = isAutoMode
                 ? ALGORITHMS
                 : ALGORITHMS.filter(a => a.id === selectedAlgoId);
 
             const attemptsLog = [];
+            const qualifiedResults = [];
 
             for (let aIdx = 0; aIdx < targetAlgos.length; aIdx++) {
                 const algo = targetAlgos[aIdx];
@@ -1287,7 +1292,6 @@
                     if (!inPosition) {
                         if (algo.entryCondition(candle, prevCandle)) {
                             inPosition = true;
-                            // 納入當天最高價與最低價計算買進價格 (買進點可為當天價格範圍 [Low, High] 內的任何適當價格)
                             const calculatedEntryPrice = algo.getEntryPrice ? algo.getEntryPrice(candle, prevCandle) : candle.close;
                             const actualEntryPrice = parseFloat(Math.min(candle.high, Math.max(candle.low, calculatedEntryPrice)).toFixed(2));
 
@@ -1364,24 +1368,67 @@
                     winRate,
                     winCount,
                     lossCount,
-                    totalTrades: trades.length
+                    totalEvaluated,
+                    totalTrades: trades.length,
+                    totalReturnPercent: parseFloat(totalReturnPercent.toFixed(1))
                 });
 
                 if (winRate >= minWinRate && totalEvaluated >= 1) {
-                    return {
+                    qualifiedResults.push({
                         success: true,
                         winRate,
                         winTradesCount: winCount,
                         lossTradesCount: lossCount,
+                        totalEvaluated,
                         totalTrades: trades.length,
                         totalReturnPercent: parseFloat(totalReturnPercent.toFixed(1)),
                         avgHoldDays,
                         algorithm: algo,
                         trades,
-                        testedCount: aIdx + 1,
+                        testedCount: targetAlgos.length,
                         attemptsLog
-                    };
+                    });
                 }
+            }
+
+            // 根據選定模式進行多優先級排序：
+            if (qualifiedResults.length > 0) {
+                if (selectedAlgoId === 'auto_max_trades') {
+                    // 最多勝敗次數優先，勝率次之，累積報酬率再次之
+                    qualifiedResults.sort((a, b) => {
+                        if (b.totalEvaluated !== a.totalEvaluated) {
+                            return b.totalEvaluated - a.totalEvaluated;
+                        }
+                        if (b.winRate !== a.winRate) {
+                            return b.winRate - a.winRate;
+                        }
+                        return b.totalReturnPercent - a.totalReturnPercent;
+                    });
+                } else if (selectedAlgoId === 'auto_max_return') {
+                    // 歷史量化交易績效最佳優先，勝率次之，勝敗次數再次之
+                    qualifiedResults.sort((a, b) => {
+                        if (b.totalReturnPercent !== a.totalReturnPercent) {
+                            return b.totalReturnPercent - a.totalReturnPercent;
+                        }
+                        if (b.winRate !== a.winRate) {
+                            return b.winRate - a.winRate;
+                        }
+                        return b.totalEvaluated - a.totalEvaluated;
+                    });
+                } else {
+                    // 自動最佳勝率：勝率優先，累積報酬率次之
+                    qualifiedResults.sort((a, b) => {
+                        if (b.winRate !== a.winRate) {
+                            return b.winRate - a.winRate;
+                        }
+                        return b.totalReturnPercent - a.totalReturnPercent;
+                    });
+                }
+
+                const bestResult = qualifiedResults[0];
+                bestResult.selectionMode = selectedAlgoId;
+                bestResult.attemptsLog = attemptsLog;
+                return bestResult;
             }
 
             return {
@@ -1390,6 +1437,7 @@
                 winTradesCount: 0,
                 lossTradesCount: 0,
                 totalTrades: 0,
+                totalEvaluated: 0,
                 totalReturnPercent: 0,
                 avgHoldDays: 0,
                 algorithm: null,
@@ -1451,7 +1499,7 @@
             return daysResult;
         }
 
-        // FEATURE 3: 統計所有 12 種策略計算未來 5 天每日看漲/看跌總數與共識結果
+        // 統計所有 12 種策略計算未來 5 天每日看漲/看跌總數與共識結果
         function predictAllStrategiesConsensus(candles, tpPct = 15, slPct = 10) {
             const allAlgos = getSystemAlgorithms(tpPct, slPct);
             const allAlgoPredictions = allAlgos.map(algo => predictAlgorithm5Days(candles, algo));
@@ -1578,10 +1626,7 @@
             const activeAlgo = backtestRes.success ? backtestRes.algorithm : null;
             const futureProj = calculateFutureProjection(candlesWithIndicators, tpPct, slPct, activeAlgo);
 
-            // FEATURE 3: 算出 12 大策略未來 5 天多空共識
             const consensus5Days = predictAllStrategiesConsensus(candlesWithIndicators, tpPct, slPct);
-            
-            // FEATURE 2: 算出當前獲選/指定策略未來 5 天每日預測
             const selectedAlgo5Days = predictAlgorithm5Days(candlesWithIndicators, activeAlgo || getSystemAlgorithms(tpPct, slPct)[0]);
 
             updateAlgoStatusBanner(backtestRes, stockInfo, tpPct, slPct, daysCount, consensus5Days, minWinRate);
@@ -1602,9 +1647,15 @@
                 icon.className = "p-2 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/40";
                 icon.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 7 7 0 0118 0z"/></svg>`;
                 
-                title.innerHTML = `量化與三大法人籌碼篩選成功：<span class="text-emerald-400 font-bold">${res.algorithm.name}</span> (勝率 ${res.winRate}%)`;
-                desc.innerHTML = `系統依序測試至第 <strong>${res.testedCount}</strong> 種策略時，在過去 <strong>${daysCount} 天</strong> 數據中成功找到符合 <strong>勝率 ≥${minWinRate}% + 法人籌碼過濾</strong>（獲利 > ${tpPct}% / 止損 -${slPct}%）之最佳模型。`;
-                badge.innerText = `試驗進度：${res.testedCount}/12 策略成功`;
+                let modeText = '最佳勝率模式';
+                if (res.selectionMode === 'auto_max_trades') modeText = '最多勝敗次數模式';
+                else if (res.selectionMode === 'auto_max_return') modeText = '最佳歷史績效模式';
+
+                const evaluatedCount = res.totalEvaluated || (res.winTradesCount + res.lossTradesCount);
+
+                title.innerHTML = `量化與三大法人籌碼篩選成功：<span class="text-emerald-400 font-bold">${res.algorithm.name}</span> (${modeText}: 總報酬 ${res.totalReturnPercent >= 0 ? '+' : ''}${res.totalReturnPercent}%, 勝率 ${res.winRate}%, 勝敗 ${evaluatedCount} 次)`;
+                desc.innerHTML = `系統已完整跑過 <strong>12 種策略</strong> 之模擬回測，並在過去 <strong>${daysCount} 天</strong> 數據中，成功為您評選出符合 <strong>勝率 ≥${minWinRate}%</strong> 且<strong>${modeText}最佳（總報酬 ${res.totalReturnPercent >= 0 ? '+' : ''}${res.totalReturnPercent}% / 勝率 ${res.winRate}% / 勝敗結算 ${evaluatedCount} 次）</strong>之量化模型。`;
+                badge.innerText = `評估進度：12/12 策略全數完測`;
                 badge.className = "px-3 py-1 bg-emerald-500/10 text-emerald-300 rounded-full text-xs font-mono border border-emerald-500/30";
             } else {
                 section.className = "p-4 rounded-2xl border bg-rose-950/30 border-rose-500/40 space-y-4 transition-all";
@@ -1612,12 +1663,11 @@
                 icon.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>`;
 
                 title.innerHTML = `⚠️ <span class="text-rose-400 font-bold">分析無果 (Analysis Inconclusive)</span> - ${stockInfo.displayName}`;
-                desc.innerHTML = `系統已窮舉測試 <strong>全套 12 種量化與三大法人籌碼演算法</strong>，該股票在過去 ${daysCount} 天數據中，無任何策略符合「勝率 ≥${minWinRate}% 且獲利 >${tpPct}% / 止損 -${slPct}%」之高勝率條件。建議維持觀望。`;
-                badge.innerText = `試驗進度：12/12 全部試畢 (無符合)`;
+                desc.innerHTML = `系統已完整評估 <strong>全套 12 種量化與三大法人籌碼演算法</strong>，該股票在過去 ${daysCount} 天數據中，無任何策略符合「勝率 ≥${minWinRate}% 且獲利 >${tpPct}% / 止損 -${slPct}%」之高勝率條件。建議維持觀望。`;
+                badge.innerText = `評估進度：12/12 策略全數完測 (無符合)`;
                 badge.className = "px-3 py-1 bg-rose-500/10 text-rose-300 rounded-full text-xs font-mono border border-rose-500/30";
             }
 
-            // FEATURE 3 UI 渲染：渲染全 12 種策略對未來 5 天多空共識結果
             const consensusContainer = document.getElementById('consensusGrid');
             if (consensusContainer && consensus5Days.length > 0) {
                 consensusContainer.innerHTML = consensus5Days.map(item => `
@@ -1710,7 +1760,6 @@
                 safeSetText('singleStrategyForecastName', `策略：綜合三大法人模型`);
             }
 
-            // FEATURE 2 UI 渲染：使用者所選/獲選策略未來 5 天逐日漲跌預測
             const selectedStratGrid = document.getElementById('selectedStrategy5DayGrid');
             if (selectedStratGrid && selectedAlgo5Days.length > 0) {
                 selectedStratGrid.innerHTML = selectedAlgo5Days.map(item => `
@@ -1745,7 +1794,7 @@
             const intro = document.getElementById('strategyDetailIntro');
 
             if (backtestRes.success) {
-                if (intro) intro.innerText = `系統針對 ${stockInfo.displayName} 採用「${backtestRes.algorithm.name}」達成 ${backtestRes.winRate}% 勝率，策略規範如下：`;
+                if (intro) intro.innerText = `系統全網測試後，為 ${stockInfo.displayName} 評選出最高勝率（${backtestRes.winRate}%）且歷史績效最佳之「${backtestRes.algorithm.name}」，策略規範如下：`;
                 if (rulesContainer) {
                     rulesContainer.innerHTML = backtestRes.algorithm.rulesText.map((rule, idx) => `
                         <div class="p-2.5 bg-slate-950/80 border border-slate-800 rounded-xl flex items-start gap-2.5">
@@ -1762,19 +1811,19 @@
                     進場後嚴格執行風控紀律：勝退場賣價為 <strong class="text-emerald-400">$${futureProj.targetProfit}</strong> (獲利 > ${tpPct}% 停利)，敗退場賣價為 <strong class="text-rose-400">$${futureProj.stopLoss}</strong> (-${slPct}% 停損)。
                 `);
             } else {
-                if (intro) intro.innerText = `試驗結果摘要：系統已嘗試以下 12 種量化與三大法人籌碼演算法，該股票均未達 75% 勝率門檻：`;
+                if (intro) intro.innerText = `試驗結果摘要：系統已完整嘗試全數 12 種量化演算法，該股票均未達 ${minWinRate}% 勝率門檻：`;
                 if (rulesContainer) {
                     rulesContainer.innerHTML = backtestRes.attemptsLog.map(a => `
                         <div class="p-2 bg-slate-950/60 border border-slate-800/80 rounded-lg flex items-center justify-between text-[11px]">
                             <span class="text-slate-400 truncate max-w-[200px]">${a.algoName}</span>
-                            <span class="font-mono text-rose-400 font-bold">最高勝率: ${a.winRate}%</span>
+                            <span class="font-mono text-rose-400 font-bold">勝率: ${a.winRate}% (總報酬: ${a.totalReturnPercent >= 0 ? '+' : ''}${a.totalReturnPercent}%)</span>
                         </div>
                     `).join('');
                 }
 
                 safeSetHTML('forecastAnalysisText', `
                     <strong class="text-rose-400">⚠️ 量化警示：</strong> 
-                    ${stockInfo.displayName} 在過去數據中無任何策略能達到 ≥75% 勝率。當前基於通用量化模型推算之觀察進場價為 <strong class="text-cyan-400">$${futureProj.entryPrice}</strong>，建議維持觀望。
+                    ${stockInfo.displayName} 在過去數據中無任何策略能達到 ≥${minWinRate}% 勝率。當前基於通用量化模型推算之觀察進場價為 <strong class="text-cyan-400">$${futureProj.entryPrice}</strong>，建議維持觀望。
                 `);
             }
         }
