@@ -60,11 +60,9 @@
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
         }
-        /* Mobile gesture smooth interaction for stock chart canvas */
         canvas {
             touch-action: pan-y pinch-zoom;
         }
-        /* Mobile viewport zoom fix for inputs */
         @media (max-width: 640px) {
             input, select {
                 font-size: 15px !important;
@@ -91,7 +89,6 @@
                     </div>
                 </div>
 
-                <!-- Mobile Badge -->
                 <div id="dataSourceBadge" class="flex md:hidden items-center gap-1.5 text-[10px] text-slate-300 bg-slate-800/80 px-2 py-1 rounded-lg border border-slate-700/60 font-mono">
                     <span class="flex h-1.5 w-1.5 relative">
                       <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -101,7 +98,6 @@
                 </div>
             </div>
 
-            <!-- Desktop API Status Indicator -->
             <div class="hidden md:flex items-center gap-2 text-xs text-slate-300 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700/60 font-mono">
                 <span class="flex h-2 w-2 relative">
                   <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -115,7 +111,6 @@
     <main class="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 w-full flex-grow space-y-4 sm:space-y-6">
 
         <section class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3.5 sm:p-5 shadow-xl space-y-4 sm:space-y-5">
-            <!-- Market Tabs Header -->
             <div class="flex items-center justify-between border-b border-slate-800 pb-3 flex-wrap gap-2">
                 <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 w-full sm:w-auto justify-center">
                     <button id="tabTW" class="market-tab flex-1 sm:flex-initial px-4 sm:px-5 py-2 text-xs font-bold rounded-lg transition-all bg-emerald-600 text-white shadow">
@@ -131,10 +126,7 @@
                 </div>
             </div>
 
-            <!-- Three-Row Input Form Layout -->
             <div class="space-y-3.5 sm:space-y-4">
-                
-                <!-- Row 1: Stock Search Input Bar -->
                 <div class="relative">
                     <label class="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center gap-1.5">
                         <span>🔍 第一列：搜尋股票標的</span>
@@ -145,18 +137,14 @@
                                autocomplete="off"
                                class="w-full bg-slate-950 border border-slate-700 text-slate-100 px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-xl text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all font-mono tracking-wider shadow-inner">
                         
-                        <!-- Autocomplete Dropdown Menu -->
                         <div id="autocompleteMenu" class="autocomplete-dropdown hidden absolute top-full left-0 right-0 mt-1 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl z-50 divide-y divide-slate-800">
-                            <!-- Populated dynamically via JS -->
                         </div>
                     </div>
                 </div>
 
-                <!-- Row 2: Parameters & Action Button -->
                 <div>
                     <label class="block text-xs font-semibold text-slate-300 mb-1.5">⚙️ 第二列：風控目標、回測天數與策略選擇</label>
                     <div class="grid grid-cols-2 sm:grid-cols-12 gap-2.5 sm:gap-3">
-                        <!-- TP % Input -->
                         <div class="col-span-1 sm:col-span-2 flex items-center bg-slate-950 border border-slate-700 rounded-xl px-2.5 sm:px-3 py-2 focus-within:border-emerald-500">
                             <span class="text-xs text-emerald-400 font-bold whitespace-nowrap mr-1">🎯 停利:</span>
                             <input type="number" id="targetProfitInput" value="15" min="1" max="100" step="0.5"
@@ -164,7 +152,6 @@
                             <span class="text-xs text-emerald-400 font-bold ml-1">%</span>
                         </div>
 
-                        <!-- SL % Input -->
                         <div class="col-span-1 sm:col-span-2 flex items-center bg-slate-950 border border-slate-700 rounded-xl px-2.5 sm:px-3 py-2 focus-within:border-rose-500">
                             <span class="text-xs text-rose-400 font-bold whitespace-nowrap mr-1">🛡️ 停損:</span>
                             <input type="number" id="stopLossInput" value="10" min="1" max="100" step="0.5"
@@ -172,7 +159,6 @@
                             <span class="text-xs text-rose-400 font-bold ml-1">%</span>
                         </div>
 
-                        <!-- Days Input -->
                         <div class="col-span-2 sm:col-span-2 flex items-center bg-slate-950 border border-slate-700 rounded-xl px-2.5 sm:px-3 py-2 focus-within:border-cyan-500">
                             <span class="text-xs text-cyan-400 font-bold whitespace-nowrap mr-1">📅 天數:</span>
                             <input type="number" id="backtestDaysInput" value="365" min="30" max="1000" step="5"
@@ -180,7 +166,6 @@
                             <span class="text-xs text-cyan-400 font-bold ml-1">天</span>
                         </div>
 
-                        <!-- Strategy Selector Input -->
                         <div class="col-span-2 sm:col-span-3 flex items-center bg-slate-950 border border-slate-700 rounded-xl px-2.5 sm:px-3 py-2 focus-within:border-purple-500">
                             <span class="text-xs text-purple-400 font-bold whitespace-nowrap mr-1.5">🧠 策略:</span>
                             <select id="strategySelect" class="w-full bg-transparent text-purple-300 text-xs font-semibold focus:outline-none cursor-pointer font-mono truncate">
@@ -200,7 +185,6 @@
                             </select>
                         </div>
 
-                        <!-- Action Submit Button -->
                         <div class="col-span-2 sm:col-span-3">
                             <button id="searchBtn" class="w-full h-full min-h-[42px] py-2.5 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 active:scale-[0.98] text-white font-bold text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-2">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
@@ -210,11 +194,9 @@
                     </div>
                 </div>
 
-                <!-- Row 3: Hot Preset Buttons -->
                 <div class="pt-2 border-t border-slate-800/80 flex flex-wrap items-center gap-2">
                     <span class="text-xs text-slate-400 font-medium">🔥 第三列：熱門推薦標的：</span>
                     <div id="presetButtonsContainer" class="flex flex-wrap gap-1.5 sm:gap-2">
-                        <!-- Populated dynamically according to active tab -->
                     </div>
                 </div>
 
@@ -239,8 +221,6 @@
         </section>
 
         <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            
-            <!-- Card 1: Win Rate -->
             <div class="bg-gradient-to-br from-slate-900 to-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-md relative overflow-hidden group hover:border-emerald-500/50 transition-all">
                 <div class="absolute -right-4 -bottom-4 w-20 h-20 bg-emerald-500/10 rounded-full blur-xl group-hover:bg-emerald-500/20 transition-all"></div>
                 <div class="flex justify-between items-start mb-2">
@@ -254,7 +234,6 @@
                 <p id="card1ConditionText" class="text-[11px] text-slate-400 mt-2">勝條件：<strong id="winCondVal" class="text-emerald-400">&gt; 15%</strong> | 敗條件：<strong id="lossCondVal" class="text-rose-400">-10%</strong></p>
             </div>
 
-            <!-- Card 2: Backtest Statistics -->
             <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-md hover:border-slate-700 transition-all">
                 <div class="flex justify-between items-start mb-2">
                     <span class="text-xs font-semibold text-slate-400">歷史量化交易績效</span>
@@ -267,7 +246,6 @@
                 <p id="statAvgDuration" class="text-[11px] text-slate-400 mt-2 font-mono">平均持有天數：-- 天</p>
             </div>
 
-            <!-- Card 3: Future Entry Target -->
             <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-md border-l-4 border-l-cyan-500 hover:border-slate-700 transition-all">
                 <div class="flex justify-between items-start mb-2">
                     <span class="text-xs font-semibold text-cyan-400">未來建議進場觀察價</span>
@@ -279,7 +257,6 @@
                 <p id="nextEntryAdvice" class="text-[11px] text-slate-400 mt-2 truncate">最新市場收盤價：$--</p>
             </div>
 
-            <!-- Card 4: Target Exit & Stop Loss -->
             <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-md border-l-4 border-l-amber-500 hover:border-slate-700 transition-all">
                 <div class="flex justify-between items-start mb-2">
                     <span class="text-xs font-semibold text-amber-400">未來退場目標 (自訂風控)</span>
@@ -296,7 +273,6 @@
                     </div>
                 </div>
             </div>
-
         </section>
 
         <section class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3.5 sm:p-5 shadow-xl space-y-4">
@@ -313,7 +289,6 @@
                     </div>
                 </div>
                 
-                <!-- Chart Controls -->
                 <div class="flex flex-wrap items-center gap-2 sm:gap-3 text-xs font-medium">
                     <div class="flex items-center gap-1 sm:gap-2 bg-slate-950 p-1 rounded-xl border border-slate-800">
                         <span class="text-[10px] text-slate-500 pl-1 font-mono hidden xs:inline">區間:</span>
@@ -339,9 +314,8 @@
                 </div>
             </div>
 
-            <!-- Interactive Top Chart Detail Bar (HUD Display Above Chart Canvas) -->
             <div id="chartDetailHUD" class="bg-slate-950/90 border border-slate-800 rounded-xl p-2.5 px-3.5 text-xs font-mono text-slate-300 flex flex-wrap items-center gap-x-4 gap-y-2 shadow-inner transition-all">
-                <span id="hudDate" class="font-bold text-slate-100 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">📅 2026-05-20</span>
+                <span id="hudDate" class="font-bold text-slate-100 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">📅 ----</span>
                 <span>開盤: <strong id="hudOpen" class="text-slate-100">$0.00</strong></span>
                 <span>最高: <strong id="hudHigh" class="text-rose-400">$0.00</strong></span>
                 <span>最低: <strong id="hudLow" class="text-emerald-400">$0.00</strong></span>
@@ -353,12 +327,10 @@
                 <span id="hudSignalTag" class="hidden px-2 py-0.5 rounded text-[10px] font-bold"></span>
             </div>
 
-            <!-- Main Stock Canvas -->
             <div class="relative w-full h-[300px] xs:h-[350px] sm:h-[420px] lg:h-[450px]">
                 <canvas id="stockMainChart"></canvas>
             </div>
 
-            <!-- Sub Chart: RSI(14) -->
             <div class="pt-2 border-t border-slate-800/80">
                 <div class="flex justify-between items-center mb-1">
                     <span class="text-xs font-semibold text-slate-400">RSI(14) 相對強弱指標副圖</span>
@@ -371,8 +343,6 @@
         </section>
 
         <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            
-            <!-- Strategy Engine Breakdown -->
             <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-3">
                 <h3 class="text-sm font-bold text-slate-200 flex items-center gap-2">
                     <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 7 7 0 0118 0z"/></svg>
@@ -383,11 +353,9 @@
                 </p>
 
                 <div id="strategyRulesContainer" class="space-y-2.5 text-xs">
-                    <!-- Dynamic rule descriptions populated by JS -->
                 </div>
             </div>
 
-            <!-- Future Trading Plan Forecast -->
             <div class="lg:col-span-2 bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-4">
                 <h3 class="text-sm font-bold text-slate-200 flex items-center gap-2">
                     <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
@@ -457,7 +425,6 @@
                     </p>
                 </div>
             </div>
-
         </section>
 
         <section class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-3">
@@ -481,7 +448,6 @@
                         </tr>
                     </thead>
                     <tbody id="tradeLogTableBody" class="divide-y divide-slate-800/60 text-slate-200">
-                        <!-- Populated by JS -->
                     </tbody>
                 </table>
             </div>
@@ -494,13 +460,11 @@
     </footer>
 
     <script>
-        // DOM Helper functions to safely set elements without throwing errors
         const safeSetText = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
         const safeSetHTML = (id, val) => { const el = document.getElementById(id); if (el) el.innerHTML = val; };
         const safeSetClass = (id, cls) => { const el = document.getElementById(id); if (el) el.className = cls; };
 
         const STOCK_FUNDAMENTALS = {
-            // Taiwan Stocks
             '2330': { pe: 24.8, eps: [10.50, 9.80, 9.50, 8.70], totalEps: 38.50 },
             '2317': { pe: 16.5, eps: [3.20, 2.80, 2.50, 2.30], totalEps: 10.80 },
             '0050': { pe: 19.2, eps: [2.10, 1.95, 1.85, 1.80], totalEps: 7.70 },
@@ -511,7 +475,6 @@
             '2382': { pe: 21.3, eps: [3.60, 3.20, 2.90, 2.70], totalEps: 12.40 },
             '2303': { pe: 11.2, eps: [1.20, 1.15, 1.10, 1.05], totalEps: 4.50 },
 
-            // US Stocks
             'MU':   { pe: 38.5, eps: [1.18, 0.92, 0.62, 0.42], totalEps: 3.14 },
             'NVDA': { pe: 46.2, eps: [0.81, 0.72, 0.68, 0.60], totalEps: 2.81 },
             'TSLA': { pe: 92.4, eps: [0.71, 0.52, 0.62, 0.58], totalEps: 2.43 },
@@ -535,7 +498,6 @@
                 };
             }
 
-            // Dynamic financial calculation for unlisted/custom tickers
             let seed = 0;
             for (let i = 0; i < symbol.length; i++) seed += symbol.charCodeAt(i);
             const estPe = parseFloat((15 + (seed % 18) + (Math.sin(seed) * 3)).toFixed(1));
@@ -553,9 +515,7 @@
             };
         }
 
-        // Built-in Stock Databases with Full Chinese/English Names
         const STOCK_DATABASE = [
-            // Taiwan Stocks
             { symbol: '2330', name: '台積電', engName: 'TSMC', market: 'TW' },
             { symbol: '2317', name: '鴻海', engName: 'Hon Hai', market: 'TW' },
             { symbol: '0050', name: '元大台灣50', engName: 'Yuanta TW Top 50 ETF', market: 'TW' },
@@ -587,7 +547,6 @@
             { symbol: '8069', name: '元太', engName: 'E Ink', market: 'TW' },
             { symbol: '2002', name: '中鋼', engName: 'China Steel', market: 'TW' },
 
-            // US Stocks
             { symbol: 'MU', name: '美光', engName: 'Micron Technology', market: 'US' },
             { symbol: 'NVDA', name: '輝達', engName: 'NVIDIA Corp', market: 'US' },
             { symbol: 'TSLA', name: '特斯拉', engName: 'Tesla Inc', market: 'US' },
@@ -618,7 +577,6 @@
 
         let TW_DYNAMIC_STOCK_DATABASE = [];
 
-        // Real market baseline price level reference dictionary
         const REAL_STOCK_BASE_LEVELS = {
             '2330': { base: 980, vol: 0.018, trend: 0.0008 },
             '2317': { base: 185, vol: 0.020, trend: 0.0006 },
@@ -782,7 +740,6 @@
             const rawQuery = query.trim();
             const qUpper = rawQuery.toUpperCase();
 
-            // Search only in target market database
             const combinedDB = currentMarket === 'TW' 
                 ? [...STOCK_DATABASE.filter(s => s.market === 'TW'), ...TW_DYNAMIC_STOCK_DATABASE]
                 : STOCK_DATABASE.filter(s => s.market === 'US');
@@ -815,7 +772,6 @@
                 </div>
             `).join('');
 
-            // Always add a quick custom entry option
             htmlContent += `
                 <div class="autocomplete-item px-4 py-2.5 bg-slate-950 hover:bg-slate-800 cursor-pointer flex items-center justify-between text-xs text-cyan-400 font-mono transition-colors border-t border-slate-800" data-symbol="${qUpper}">
                     <span>🔍 直接分析此代碼/名稱：<strong>${qUpper}</strong></span>
@@ -903,7 +859,6 @@
                     console.warn("FinMind API fetch fallback triggered:", err);
                 }
             } else {
-                // Fetch US Stock Prices via Yahoo Finance CORS API with fallback proxies
                 const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${uppercaseSymbol}?range=2y&interval=1d`;
                 const proxies = [
                     `https://corsproxy.io/?${encodeURIComponent(yahooUrl)}`,
@@ -1017,13 +972,11 @@
             const n = candles.length;
             if (n === 0) return candles;
 
-            // EMA 20 & EMA 50
             let k20 = 2 / (20 + 1);
             let k50 = 2 / (50 + 1);
             let ema20 = candles[0].close;
             let ema50 = candles[0].close;
 
-            // RSI 14
             let gains = 0, losses = 0;
             for (let i = 1; i < Math.min(15, n); i++) {
                 let diff = candles[i].close - candles[i-1].close;
@@ -1036,7 +989,6 @@
             for (let i = 0; i < n; i++) {
                 const c = candles[i];
                 
-                // EMA
                 if (i > 0) {
                     ema20 = c.close * k20 + ema20 * (1 - k20);
                     ema50 = c.close * k50 + ema50 * (1 - k50);
@@ -1044,7 +996,6 @@
                 c.ema20 = parseFloat(ema20.toFixed(2));
                 c.ema50 = parseFloat(ema50.toFixed(2));
 
-                // Bollinger Bands (20)
                 if (i >= 19) {
                     let slice = candles.slice(i - 19, i + 1).map(x => x.close);
                     let sum = slice.reduce((a, b) => a + b, 0);
@@ -1060,7 +1011,6 @@
                     c.bbLower = c.close * 0.95;
                 }
 
-                // RSI 14
                 if (i >= 14) {
                     if (i > 14) {
                         let diff = c.close - candles[i-1].close;
@@ -1078,7 +1028,6 @@
                     c.rsi = 50;
                 }
 
-                // Stochastic KD (9,3,3)
                 if (i >= 8) {
                     let kSlice = candles.slice(i - 8, i + 1);
                     let lowest = Math.min(...kSlice.map(x => x.low));
@@ -1090,7 +1039,6 @@
                 }
             }
 
-            // Stochastic D (%D 3-period smooth)
             for (let i = 0; i < n; i++) {
                 if (i >= 2) {
                     let dVal = (candles[i].stochK + candles[i-1].stochK + candles[i-2].stochK) / 3;
@@ -1311,72 +1259,107 @@
                 const winCount = trades.filter(t => t.isWin).length;
                 const lossCount = trades.filter(t => t.isLoss).length;
                 const totalEvaluated = winCount + lossCount;
+                const winRate = totalEvaluated > 0 ? parseFloat(((winCount / totalEvaluated) * 100).toFixed(1)) : 0;
 
-                let winRate = 0;
-                if (totalEvaluated > 0) {
-                    winRate = parseFloat((winCount / totalEvaluated * 100).toFixed(1));
-                } else if (trades.length > 0) {
-                    winRate = 100;
-                }
+                const totalReturnPercent = trades.reduce((sum, t) => sum + t.returnPercent, 0);
+                const avgHoldDays = trades.length > 0 ? Math.round(trades.reduce((sum, t) => sum + t.holdDays, 0) / trades.length) : 0;
 
                 attemptsLog.push({
+                    algoId: algo.id,
                     algoName: algo.name,
-                    testedCount: aIdx + 1,
                     winRate,
+                    winCount,
+                    lossCount,
                     totalTrades: trades.length
                 });
 
-                if ((selectedAlgoId !== 'auto') || (winRate >= 75 && trades.length >= 1)) {
-                    let totalRetSum = 0;
-                    let holdDaysSum = 0;
-                    trades.forEach(t => {
-                        totalRetSum += t.returnPercent;
-                        holdDaysSum += t.holdDays;
-                    });
-
+                if (winRate >= 75 && totalEvaluated >= 1) {
                     return {
-                        success: selectedAlgoId !== 'auto' ? true : (winRate >= 75),
-                        algorithm: algo,
+                        success: true,
                         winRate,
-                        trades,
-                        totalTrades: trades.length,
                         winTradesCount: winCount,
                         lossTradesCount: lossCount,
-                        totalReturnPercent: parseFloat(totalRetSum.toFixed(1)),
-                        avgHoldDays: trades.length > 0 ? Math.round(holdDaysSum / trades.length) : 0,
+                        totalTrades: trades.length,
+                        totalReturnPercent: parseFloat(totalReturnPercent.toFixed(1)),
+                        avgHoldDays,
+                        algorithm: algo,
+                        trades,
                         testedCount: aIdx + 1,
-                        attemptsLog,
-                        isCustomSelected: selectedAlgoId !== 'auto'
+                        attemptsLog
                     };
                 }
             }
 
             return {
                 success: false,
-                attemptsLog,
-                testedCount: ALGORITHMS.length,
-                trades: []
+                winRate: 0,
+                winTradesCount: 0,
+                lossTradesCount: 0,
+                totalTrades: 0,
+                totalReturnPercent: 0,
+                avgHoldDays: 0,
+                algorithm: null,
+                trades: [],
+                testedCount: targetAlgos.length,
+                attemptsLog
             };
         }
 
-        function calculateFutureProjection(candles, tpPct = 15, slPct = 10) {
+        function calculateFutureProjection(candles, tpPct = 15, slPct = 10, selectedAlgorithm = null) {
             if (!candles || candles.length === 0) return {};
             const lastCandle = candles[candles.length - 1];
             const currentPrice = lastCandle.close;
 
-            const supportLevel = Math.min(lastCandle.ema20, lastCandle.bbLower > 0 ? lastCandle.bbLower : currentPrice * 0.96);
-            let suggestedEntryPrice = Math.min(currentPrice, Math.max(supportLevel, currentPrice * 0.95));
+            let supportLevel = Math.min(lastCandle.ema20, lastCandle.bbLower > 0 ? lastCandle.bbLower : currentPrice * 0.96);
+
+            if (selectedAlgorithm && selectedAlgorithm.id) {
+                switch(selectedAlgorithm.id) {
+                    case 'algo_bb_bounce':
+                    case 'algo_donchian_dip':
+                    case 'algo_williams_r':
+                        supportLevel = lastCandle.bbLower > 0 ? lastCandle.bbLower : currentPrice * 0.95;
+                        break;
+                    case 'algo_stoch_kd_hook':
+                    case 'algo_triple_screen':
+                        supportLevel = lastCandle.ema50 > 0 ? lastCandle.ema50 : currentPrice * 0.95;
+                        break;
+                    case 'algo_ema_golden_cross':
+                    case 'algo_roc_momentum':
+                    case 'algo_rsi_oversold':
+                        supportLevel = lastCandle.ema20 > 0 ? lastCandle.ema20 : currentPrice * 0.96;
+                        break;
+                    case 'algo_atr_breakout':
+                        supportLevel = lastCandle.bbMiddle > 0 ? lastCandle.bbMiddle : currentPrice * 0.97;
+                        break;
+                    case 'algo_ema_squeeze':
+                        supportLevel = (lastCandle.ema20 + lastCandle.ema50) / 2;
+                        break;
+                    default:
+                        supportLevel = Math.min(lastCandle.ema20, lastCandle.bbLower > 0 ? lastCandle.bbLower : currentPrice * 0.96);
+                        break;
+                }
+            }
+
+            let suggestedEntryPrice = Math.min(currentPrice, Math.max(supportLevel, currentPrice * 0.90));
             suggestedEntryPrice = parseFloat(suggestedEntryPrice.toFixed(2));
 
             const targetProfit = parseFloat((suggestedEntryPrice * (1 + tpPct / 100)).toFixed(2));
             const stopLoss = parseFloat((suggestedEntryPrice * (1 - slPct / 100)).toFixed(2));
+
+            let statusBadge = '分批觀望';
+            if (currentPrice <= suggestedEntryPrice * 1.015) {
+                statusBadge = '觸及觀察價 (可掛單)';
+            } else if (currentPrice <= suggestedEntryPrice * 1.04) {
+                statusBadge = '接近建議買區';
+            }
 
             return {
                 currentPrice,
                 entryPrice: suggestedEntryPrice,
                 targetProfit,
                 stopLoss,
-                statusBadge: currentPrice <= suggestedEntryPrice * 1.02 ? '可準備掛單' : '分批觀望'
+                statusBadge,
+                algoName: selectedAlgorithm ? selectedAlgorithm.name : '綜合量化模型'
             };
         }
 
@@ -1401,7 +1384,9 @@
 
             const candlesWithIndicators = calculateTechnicalIndicators(candles);
             const backtestRes = runSequentialMultiAlgoBacktest(candlesWithIndicators, tpPct, slPct, selectedAlgoId);
-            const futureProj = calculateFutureProjection(candlesWithIndicators, tpPct, slPct);
+            
+            const activeAlgo = backtestRes.success ? backtestRes.algorithm : null;
+            const futureProj = calculateFutureProjection(candlesWithIndicators, tpPct, slPct, activeAlgo);
 
             updateAlgoStatusBanner(backtestRes, stockInfo, tpPct, slPct, daysCount);
             updateDashboardUI(backtestRes, futureProj, candlesWithIndicators, stockInfo, tpPct, slPct, daysCount);
@@ -1440,18 +1425,16 @@
         function updateDashboardUI(backtestRes, futureProj, candles, stockInfo, tpPct, slPct) {
             const lastCandle = candles[candles.length - 1];
 
-            // Requirement 1: Update current price directly under stock name
             const prevClose = candles.length >= 2 ? candles[candles.length - 2].close : lastCandle.close;
             const priceDiff = lastCandle.close - prevClose;
             const priceDiffPct = (priceDiff / prevClose) * 100;
             const diffSign = priceDiff >= 0 ? '+' : '';
-            const diffClass = priceDiff >= 0 ? 'text-rose-400 font-semibold' : 'text-emerald-400 font-semibold'; // TW style (Red=Up, Green=Down)
+            const diffClass = priceDiff >= 0 ? 'text-rose-400 font-semibold' : 'text-emerald-400 font-semibold';
 
             safeSetText('chartCurrentPrice', `$${lastCandle.close.toFixed(2)}`);
             safeSetText('chartPriceChange', `${diffSign}${priceDiff.toFixed(2)} (${diffSign}${priceDiffPct.toFixed(2)}%)`);
             safeSetClass('chartPriceChange', `text-xs font-mono ${diffClass}`);
 
-            // Requirement 2: Update PE ratio and last 4 quarters EPS
             const fundamentals = getStockFundamentals(stockInfo.symbol, lastCandle.close);
             safeSetText('peRatioBadge', `本益比 P/E: ${fundamentals.pe} 倍`);
             safeSetText('epsQ4', `$${fundamentals.epsList[0].toFixed(2)}`);
@@ -1512,7 +1495,7 @@
 
             safeSetText('nextEntryPrice', `$${futureProj.entryPrice}`);
             safeSetText('nextEntryStatus', futureProj.statusBadge);
-            safeSetText('nextEntryAdvice', `最新市場收盤價：$${futureProj.currentPrice}`);
+            safeSetText('nextEntryAdvice', `依「${futureProj.algoName}」推算 (最新價: $${futureProj.currentPrice})`);
 
             safeSetText('nextTakeProfit', `$${futureProj.targetProfit} (>${tpPct}%)`);
             safeSetText('nextStopLoss', `$${futureProj.stopLoss} (-${slPct}%)`);
@@ -1539,10 +1522,10 @@
                 }
 
                 safeSetHTML('forecastAnalysisText', `
-                    當前 <strong class="text-white">${stockInfo.displayName}</strong> 最新收盤價為 <strong class="text-white">$${futureProj.currentPrice}</strong>。
-                    採用 <strong class="text-emerald-400">${backtestRes.algorithm.name}</strong> (${backtestRes.winRate}% 勝率) 推算：
-                    下一次建議最佳進場掛單價為 <strong class="text-cyan-400">$${futureProj.entryPrice}</strong>。
-                    進場後嚴格遵守紀律：勝退場賣價為 <strong class="text-emerald-400">$${futureProj.targetProfit}</strong> (獲利 > ${tpPct}% 停利)，敗退場賣價為 <strong class="text-rose-400">$${futureProj.stopLoss}</strong> (-${slPct}% 停損)。
+                    當前 <strong class="text-white">${stockInfo.displayName}</strong> 最新收盤價為 <strong class="text-white">$${futureProj.currentPrice}</strong>。<br/>
+                    依選定之 <strong class="text-emerald-400">${backtestRes.algorithm.name}</strong> 邏輯推算：
+                    下一次建議最佳進場觀察價為 <strong class="text-cyan-400">$${futureProj.entryPrice}</strong>。<br/>
+                    進場後嚴格執行風控紀律：勝退場賣價為 <strong class="text-emerald-400">$${futureProj.targetProfit}</strong> (獲利 > ${tpPct}% 停利)，敗退場賣價為 <strong class="text-rose-400">$${futureProj.stopLoss}</strong> (-${slPct}% 停損)。
                 `);
             } else {
                 if (intro) intro.innerText = `試驗結果摘要：系統已嘗試以下 12 種經典量化演算法，該股票均未達 75% 勝率門檻：`;
@@ -1557,7 +1540,7 @@
 
                 safeSetHTML('forecastAnalysisText', `
                     <strong class="text-rose-400">⚠️ 量化警示：</strong> 
-                    ${stockInfo.displayName} 在過去 365 天內波動劇烈或無明顯規律趨勢，在嘗試所有 12 種演算法後，<strong class="text-white">無任何一種策略能達到 ≥75% 之獲利勝率</strong>。建議暫時觀望或調整風控參數。
+                    ${stockInfo.displayName} 在過去數據中無任何策略能達到 ≥75% 勝率。當前基於通用量化模型推算之觀察進場價為 <strong class="text-cyan-400">$${futureProj.entryPrice}</strong>，建議維持觀望。
                 `);
             }
         }
@@ -1644,7 +1627,6 @@
             if (backtestRes.success) {
                 backtestRes.trades.forEach(t => {
                     if (t.entryIndex < candles.length) {
-                        // Place marker on top layer at exact entry price
                         buyMarkers[t.entryIndex] = t.entryPrice;
                         buyPrices[t.entryIndex] = t.entryPrice;
                     }
@@ -1660,7 +1642,6 @@
                 });
             }
 
-            // Initialize Top HUD with latest candle details by default
             if (candles.length > 0) {
                 const lastIdx = candles.length - 1;
                 updateChartDetailHUD(candles[lastIdx], buyPrices[lastIdx], winExitPrices[lastIdx], lossExitPrices[lastIdx]);
@@ -1669,14 +1650,13 @@
             if (stockChartInstance) stockChartInstance.destroy();
             if (rsiChartInstance) rsiChartInstance.destroy();
 
-            // Custom Candlestick Rendering Plugin - rendered BEFORE datasets so markers draw on TOP LAYER
             const candlestickPlugin = {
                 id: 'candlestickRenderer',
                 beforeDatasetsDraw(chart) {
                     const { ctx, scales: { x, y } } = chart;
                     ctx.save();
                     
-                    const meta = chart.getDatasetMeta(3); // Candlestick dummy dataset index
+                    const meta = chart.getDatasetMeta(3);
                     if (!meta || !meta.data) return;
 
                     const barWidth = Math.max(1, Math.min(12, (x.width / candles.length) * 0.65));
@@ -1692,9 +1672,8 @@
                         const lowY = y.getPixelForValue(c.low);
 
                         const isUp = c.close >= c.open;
-                        const candleColor = isUp ? '#f43f5e' : '#10b981'; // Taiwan Red = Up, Green = Down
+                        const candleColor = isUp ? '#f43f5e' : '#10b981';
 
-                        // Draw Wick (High to Low vertical line)
                         ctx.strokeStyle = candleColor;
                         ctx.lineWidth = 1.2;
                         ctx.beginPath();
@@ -1702,7 +1681,6 @@
                         ctx.lineTo(xPos, lowY);
                         ctx.stroke();
 
-                        // Draw Candle Body (Open to Close rectangle)
                         const bodyTop = Math.min(openY, closeY);
                         const bodyHeight = Math.max(2, Math.abs(closeY - openY));
 
@@ -1727,7 +1705,7 @@
                             pointStyle: 'triangle',
                             pointRadius: 9,
                             pointHoverRadius: 12,
-                            backgroundColor: '#06b6d4', // Bright Cyan
+                            backgroundColor: '#06b6d4',
                             borderColor: '#0284c7',
                             borderWidth: 2,
                             showLine: false,
@@ -1739,7 +1717,7 @@
                             pointStyle: 'rectRot',
                             pointRadius: 9,
                             pointHoverRadius: 12,
-                            backgroundColor: '#facc15', // Bright Amber / Yellow
+                            backgroundColor: '#facc15',
                             borderColor: '#d97706',
                             borderWidth: 2,
                             showLine: false,
@@ -1751,7 +1729,7 @@
                             pointStyle: 'crossRot',
                             pointRadius: 9,
                             pointHoverRadius: 12,
-                            backgroundColor: '#c084fc', // Bright Purple / Violet
+                            backgroundColor: '#c084fc',
                             borderColor: '#9333ea',
                             borderWidth: 3,
                             showLine: false,
@@ -1827,9 +1805,7 @@
                                 onZoom: syncRsiScale
                             }
                         },
-                        tooltip: {
-                            enabled: false // Disabled floating tooltip; detailed metrics presented in top HUD bar
-                        }
+                        tooltip: { enabled: false }
                     },
                     scales: {
                         x: {
@@ -1844,7 +1820,6 @@
                 }
             });
 
-            // Reset HUD to latest candle on canvas mouse leave
             const canvasEl = document.getElementById('stockMainChart');
             if (canvasEl) {
                 canvasEl.addEventListener('mouseleave', () => {
