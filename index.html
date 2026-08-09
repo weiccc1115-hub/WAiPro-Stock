@@ -56,7 +56,7 @@
             background: #64748b;
         }
         .autocomplete-dropdown {
-            max-height: 280px;
+            max-height: 320px;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
         }
@@ -110,7 +110,7 @@
 
     <main class="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 w-full flex-grow space-y-4 sm:space-y-6">
 
-        <section class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3.5 sm:p-5 shadow-xl space-y-4 sm:space-y-5">
+        <section class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3.5 sm:p-5 shadow-xl space-y-4 sm:space-y-5 relative">
             <div class="flex items-center justify-between border-b border-slate-800 pb-3 flex-wrap gap-2">
                 <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 w-full sm:w-auto justify-center">
                     <button id="tabTW" class="market-tab flex-1 sm:flex-initial px-4 sm:px-5 py-2 text-xs font-bold rounded-lg transition-all bg-emerald-600 text-white shadow">
@@ -127,13 +127,13 @@
             </div>
 
             <div class="space-y-3.5 sm:space-y-4">
-                <div class="relative">
+                <div class="relative z-30">
                     <label class="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center gap-1.5">
                         <span>🔍 第一列：搜尋股票標的</span>
-                        <span class="text-[10px] sm:text-[11px] text-slate-500 font-normal">(支援代號、中文與英文名稱)</span>
+                        <span class="text-[10px] sm:text-[11px] text-slate-500 font-normal">(點擊或輸入代號、中文與英文名稱)</span>
                     </label>
                     <div class="relative">
-                        <input type="text" id="stockInput" value="2330" placeholder="請輸入股票代號或名稱 (例如: 2330, 鴻海, 群聯, MU, NVDA...)" 
+                        <input type="text" id="stockInput" value="2330" placeholder="請輸入股票代號或名稱 (例如: 2330, 鴻海, 群聯, 0050, NVDA, MU...)" 
                                autocomplete="off"
                                class="w-full bg-slate-950 border border-slate-700 text-slate-100 px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-xl text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all font-mono tracking-wider shadow-inner">
                         
@@ -212,7 +212,6 @@
             </div>
         </section>
 
-        <!-- 獨立區塊：全 12 種量化策略未來 5 天多空共識預測區塊 -->
         <section class="p-4 rounded-2xl border bg-slate-900/90 border-slate-800 space-y-3 shadow-xl">
             <div class="flex items-center justify-between flex-wrap gap-2 border-b border-slate-800 pb-2.5">
                 <span class="text-xs font-bold text-amber-400 flex items-center gap-1.5">
@@ -434,19 +433,19 @@
 
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 font-mono text-xs">
                         <div class="p-2 bg-slate-900/90 rounded-xl border border-slate-800/80 text-center">
-                            <span class="text-[10px] text-slate-400 block mb-0.5">前1季 EPS (最近)</span>
+                            <span id="epsLabelQ4" class="text-[10px] text-slate-400 block mb-0.5">2026 Q1 EPS (最近)</span>
                             <span id="epsQ4" class="font-bold text-slate-100">$0.00</span>
                         </div>
                         <div class="p-2 bg-slate-900/90 rounded-xl border border-slate-800/80 text-center">
-                            <span class="text-[10px] text-slate-400 block mb-0.5">前2季 EPS</span>
+                            <span id="epsLabelQ3" class="text-[10px] text-slate-400 block mb-0.5">2025 Q4 EPS</span>
                             <span id="epsQ3" class="font-bold text-slate-100">$0.00</span>
                         </div>
                         <div class="p-2 bg-slate-900/90 rounded-xl border border-slate-800/80 text-center">
-                            <span class="text-[10px] text-slate-400 block mb-0.5">前3季 EPS</span>
+                            <span id="epsLabelQ2" class="text-[10px] text-slate-400 block mb-0.5">2025 Q3 EPS</span>
                             <span id="epsQ2" class="font-bold text-slate-100">$0.00</span>
                         </div>
                         <div class="p-2 bg-slate-900/90 rounded-xl border border-slate-800/80 text-center">
-                            <span class="text-[10px] text-slate-400 block mb-0.5">前4季 EPS</span>
+                            <span id="epsLabelQ1" class="text-[10px] text-slate-400 block mb-0.5">2025 Q2 EPS</span>
                             <span id="epsQ1" class="font-bold text-slate-100">$0.00</span>
                         </div>
                     </div>
@@ -503,43 +502,206 @@
         const safeSetHTML = (id, val) => { const el = document.getElementById(id); if (el) el.innerHTML = val; };
         const safeSetClass = (id, cls) => { const el = document.getElementById(id); if (el) el.className = cls; };
 
-        const STOCK_FUNDAMENTALS = {
-            '2330': { pe: 24.8, eps: [10.50, 9.80, 9.50, 8.70], totalEps: 38.50 },
-            '2317': { pe: 16.5, eps: [3.20, 2.80, 2.50, 2.30], totalEps: 10.80 },
-            '0050': { pe: 19.2, eps: [2.10, 1.95, 1.85, 1.80], totalEps: 7.70 },
-            '2454': { pe: 22.4, eps: [14.80, 13.50, 13.00, 12.20], totalEps: 53.50 },
-            '8299': { pe: 18.2, eps: [8.50, 7.80, 7.20, 6.90], totalEps: 30.40 },
-            '2308': { pe: 28.5, eps: [3.80, 3.50, 3.20, 3.10], totalEps: 13.60 },
-            '2603': { pe: 6.8,  eps: [8.20, 7.50, 6.80, 5.20], totalEps: 27.70 },
-            '2382': { pe: 21.3, eps: [3.60, 3.20, 2.90, 2.70], totalEps: 12.40 },
-            '2303': { pe: 11.2, eps: [1.20, 1.15, 1.10, 1.05], totalEps: 4.50 },
+        let currentMarket = 'TW';
+        let stockChartInstance = null;
+        let rsiChartInstance = null;
+        let TW_DYNAMIC_STOCK_DATABASE = [];
 
-            'MU':   { pe: 38.5, eps: [1.18, 0.92, 0.62, 0.42], totalEps: 3.14 },
-            'NVDA': { pe: 46.2, eps: [0.81, 0.72, 0.68, 0.60], totalEps: 2.81 },
-            'TSLA': { pe: 92.4, eps: [0.71, 0.52, 0.62, 0.58], totalEps: 2.43 },
-            'AAPL': { pe: 34.1, eps: [1.64, 1.40, 1.53, 2.18], totalEps: 6.75 },
-            'MSFT': { pe: 35.8, eps: [3.30, 3.20, 2.94, 2.99], totalEps: 12.43 },
-            'GOOGL':{ pe: 23.5, eps: [2.12, 1.89, 1.89, 1.64], totalEps: 7.54 },
-            'AMZN': { pe: 41.2, eps: [1.43, 1.26, 0.98, 1.00], totalEps: 4.67 },
-            'META': { pe: 26.3, eps: [6.03, 5.16, 4.71, 5.33], totalEps: 21.23 },
-            'AMD':  { pe: 42.1, eps: [0.92, 0.69, 0.62, 0.58], totalEps: 2.81 },
-            'QCOM': { pe: 18.6, eps: [2.69, 2.44, 2.33, 2.02], totalEps: 9.48 }
+        // 包含完整台美股熱門標的與權值股之預設資料庫
+        const STOCK_DATABASE = [
+            // 台股熱門權值股
+            { symbol: '2330', name: '台積電', engName: 'TSMC', market: 'TW' },
+            { symbol: '2317', name: '鴻海', engName: 'Foxconn', market: 'TW' },
+            { symbol: '2454', name: '聯發科', engName: 'MediaTek', market: 'TW' },
+            { symbol: '8299', name: '群聯', engName: 'Phison', market: 'TW' },
+            { symbol: '0050', name: '元大台灣50', engName: 'Yuanta TW50', market: 'TW' },
+            { symbol: '0056', name: '元大高股息', engName: 'Yuanta High Div', market: 'TW' },
+            { symbol: '00878', name: '國泰永續高股息', engName: 'Cathay ESG', market: 'TW' },
+            { symbol: '00919', name: '群益台灣精選高息', engName: 'Capital TW Div', market: 'TW' },
+            { symbol: '00929', name: '復華台灣科技優息', engName: 'Fuh Hwa Tech', market: 'TW' },
+            { symbol: '00940', name: '元大台灣價值高息', engName: 'Yuanta TW Value', market: 'TW' },
+            { symbol: '2308', name: '台達電', engName: 'Delta', market: 'TW' },
+            { symbol: '2603', name: '長榮', engName: 'Evergreen', market: 'TW' },
+            { symbol: '2382', name: '廣達', engName: 'Quanta', market: 'TW' },
+            { symbol: '2303', name: '聯電', engName: 'UMC', market: 'TW' },
+            { symbol: '3008', name: '大立光', engName: 'Largan', market: 'TW' },
+            { symbol: '2357', name: '華碩', engName: 'ASUS', market: 'TW' },
+            { symbol: '3231', name: '緯創', engName: 'Wistron', market: 'TW' },
+            { symbol: '6669', name: '緯穎', engName: 'Wiwynn', market: 'TW' },
+            { symbol: '2301', name: '光寶科', engName: 'LiteOn', market: 'TW' },
+            { symbol: '1513', name: '中興電', engName: 'CHEM', market: 'TW' },
+            { symbol: '2881', name: '富邦金', engName: 'Fubon', market: 'TW' },
+            { symbol: '2882', name: '國泰金', engName: 'Cathay', market: 'TW' },
+            { symbol: '2891', name: '中信金', engName: 'CTBC', market: 'TW' },
+            { symbol: '3661', name: '世芯-KY', engName: 'Alchip', market: 'TW' },
+            { symbol: '5269', name: '祥碩', engName: 'Asmedia', market: 'TW' },
+            { symbol: '3034', name: '聯詠', engName: 'Novatek', market: 'TW' },
+            { symbol: '2379', name: '瑞昱', engName: 'Realtek', market: 'TW' },
+            { symbol: '3017', name: '奇鋐', engName: 'AVC', market: 'TW' },
+            { symbol: '3324', name: '雙鴻', engName: 'Auras', market: 'TW' },
+
+            // 美股熱門巨頭
+            { symbol: 'MU', name: '美光科技', engName: 'Micron', market: 'US' },
+            { symbol: 'NVDA', name: '輝達', engName: 'NVIDIA', market: 'US' },
+            { symbol: 'TSLA', name: '特斯拉', engName: 'Tesla', market: 'US' },
+            { symbol: 'AAPL', name: '蘋果', engName: 'Apple', market: 'US' },
+            { symbol: 'MSFT', name: '微軟', engName: 'Microsoft', market: 'US' },
+            { symbol: 'GOOGL', name: '谷歌', engName: 'Alphabet', market: 'US' },
+            { symbol: 'AMZN', name: '亞馬遜', engName: 'Amazon', market: 'US' },
+            { symbol: 'META', name: 'Meta', engName: 'Meta', market: 'US' },
+            { symbol: 'AMD', name: '超微', engName: 'AMD', market: 'US' },
+            { symbol: 'QCOM', name: '高通', engName: 'Qualcomm', market: 'US' },
+            { symbol: 'AVGO', name: '博通', engName: 'Broadcom', market: 'US' },
+            { symbol: 'INTC', name: '英特爾', engName: 'Intel', market: 'US' },
+            { symbol: 'TSM', name: '台積電ADR', engName: 'TSMC ADR', market: 'US' },
+            { symbol: 'PLTR', name: 'Palantir', engName: 'Palantir', market: 'US' },
+            { symbol: 'SMCI', name: '超微電腦', engName: 'Super Micro', market: 'US' },
+            { symbol: 'ARM', name: '安謀', engName: 'ARM', market: 'US' }
+        ];
+
+        async function fetchFullStockDatabase() {
+            try {
+                const response = await fetch('https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockInfo');
+                const json = await response.json();
+                if (json && json.data && Array.isArray(json.data)) {
+                    TW_DYNAMIC_STOCK_DATABASE = json.data
+                        .filter(item => item.stock_id && item.stock_name)
+                        .map(item => ({
+                            symbol: item.stock_id,
+                            name: item.stock_name,
+                            engName: item.stock_id,
+                            market: 'TW'
+                        }));
+                }
+            } catch (e) {
+                console.warn("FinMind stock database prefetch skipped:", e);
+            }
+        }
+
+        const REAL_STOCK_BASE_LEVELS = {
+            '2330': { base: 980, vol: 0.018, trend: 0.0008 },
+            '2317': { base: 180, vol: 0.020, trend: 0.0005 },
+            '0050': { base: 175, vol: 0.012, trend: 0.0004 },
+            '2454': { base: 1250, vol: 0.022, trend: 0.0007 },
+            '8299': { base: 1850, vol: 0.028, trend: 0.0009 },
+            '2308': { base: 390, vol: 0.021, trend: 0.0006 },
+            '2603': { base: 185, vol: 0.025, trend: 0.0003 },
+            '2382': { base: 280, vol: 0.024, trend: 0.0008 },
+            '2303': { base: 52, vol: 0.016, trend: 0.0002 },
+
+            'MU': { base: 110, vol: 0.032, trend: 0.0012 },
+            'NVDA': { base: 125, vol: 0.035, trend: 0.0015 },
+            'TSLA': { base: 220, vol: 0.040, trend: 0.0010 },
+            'AAPL': { base: 225, vol: 0.018, trend: 0.0006 },
+            'MSFT': { base: 440, vol: 0.016, trend: 0.0007 },
+            'GOOGL': { base: 175, vol: 0.020, trend: 0.0006 },
+            'AMZN': { base: 185, vol: 0.022, trend: 0.0008 },
+            'META': { base: 500, vol: 0.028, trend: 0.0011 },
+            'AMD': { base: 150, vol: 0.034, trend: 0.0010 },
+            'QCOM': { base: 170, vol: 0.026, trend: 0.0007 }
         };
 
+        const STOCK_FUNDAMENTALS = {
+            '2330': { pe: 21.5, quarters: ['2026 Q2', '2026 Q1', '2025 Q4', '2025 Q3'], eps: [27.25, 22.08, 19.50, 17.44], totalEps: 86.27 },
+            '2317': { pe: 13.5, quarters: ['2026 Q1', '2025 Q4', '2025 Q3', '2025 Q2'], eps: [3.56, 3.23, 4.15, 3.85], totalEps: 14.79 },
+            '0050': { pe: 19.2, quarters: ['2026 Q1', '2025 Q4', '2025 Q3', '2025 Q2'], eps: [2.10, 1.95, 1.85, 1.80], totalEps: 7.70 },
+            '2454': { pe: 18.0, quarters: ['2026 Q2', '2026 Q1', '2025 Q4', '2025 Q3'], eps: [15.28, 15.17, 14.40, 15.84], totalEps: 60.69 },
+            '8299': { pe: 17.6, quarters: ['2026 Q1', '2025 Q4', '2025 Q3', '2025 Q2'], eps: [68.80, 22.08, 10.75, 3.60], totalEps: 105.23 },
+            '2308': { pe: 24.5, quarters: ['2026 Q1', '2025 Q4', '2025 Q3', '2025 Q2'], eps: [3.88, 3.80, 4.23, 3.83], totalEps: 15.74 },
+            '2603': { pe: 5.3,  quarters: ['2026 Q1', '2025 Q4', '2025 Q3', '2025 Q2'], eps: [8.20, 7.50, 10.20, 8.80], totalEps: 34.70 },
+            '2382': { pe: 18.5, quarters: ['2026 Q1', '2025 Q4', '2025 Q3', '2025 Q2'], eps: [3.85, 3.80, 4.12, 3.92], totalEps: 15.69 },
+            '2303': { pe: 12.2, quarters: ['2026 Q1', '2025 Q4', '2025 Q3', '2025 Q2'], eps: [0.84, 1.15, 1.16, 1.11], totalEps: 4.26 },
+            '3008': { pe: 14.2, quarters: ['2026 Q1', '2025 Q4', '2025 Q3', '2025 Q2'], eps: [45.80, 42.50, 50.10, 37.20], totalEps: 175.60 },
+            '2357': { pe: 10.8, quarters: ['2026 Q1', '2025 Q4', '2025 Q3', '2025 Q2'], eps: [11.50, 11.20, 14.80, 15.90], totalEps: 53.40 },
+            '3231': { pe: 16.5, quarters: ['2026 Q1', '2025 Q4', '2025 Q3', '2025 Q2'], eps: [1.22, 1.85, 1.95, 1.80], totalEps: 6.82 },
+            '6669': { pe: 22.8, quarters: ['2026 Q1', '2025 Q4', '2025 Q3', '2025 Q2'], eps: [26.90, 35.80, 38.20, 32.50], totalEps: 133.40 },
+
+            'MU':   { pe: 25.5, quarters: ['2026 Q2', '2026 Q1', '2025 Q4', '2025 Q3'], eps: [12.20, 4.78, 1.18, 0.92], totalEps: 19.08 },
+            'NVDA': { pe: 32.2, quarters: ['2026 Q1', '2025 Q4', '2025 Q3', '2025 Q2'], eps: [1.87, 1.62, 1.30, 1.04], totalEps: 5.83 },
+            'TSLA': { pe: 65.4, quarters: ['2026 Q1', '2025 Q4', '2025 Q3', '2025 Q2'], eps: [0.41, 0.71, 0.52, 0.62], totalEps: 2.26 },
+            'AAPL': { pe: 30.1, quarters: ['2026 Q2', '2026 Q1', '2025 Q4', '2025 Q3'], eps: [2.01, 2.42, 1.64, 1.40], totalEps: 7.47 },
+            'MSFT': { pe: 32.8, quarters: ['2026 Q1', '2025 Q4', '2025 Q3', '2025 Q2'], eps: [3.30, 3.20, 2.94, 2.99], totalEps: 12.43 },
+            'GOOGL':{ pe: 21.5, quarters: ['2026 Q1', '2025 Q4', '2025 Q3', '2025 Q2'], eps: [2.12, 1.89, 1.89, 1.64], totalEps: 7.54 },
+            'AMZN': { pe: 38.2, quarters: ['2026 Q1', '2025 Q4', '2025 Q3', '2025 Q2'], eps: [2.78, 1.89, 1.46, 1.29], totalEps: 7.42 },
+            'META': { pe: 24.3, quarters: ['2026 Q1', '2025 Q4', '2025 Q3', '2025 Q2'], eps: [7.31, 5.16, 4.71, 5.33], totalEps: 22.51 },
+            'AMD':  { pe: 35.1, quarters: ['2026 Q1', '2025 Q4', '2025 Q3', '2025 Q2'], eps: [0.92, 0.69, 0.62, 0.58], totalEps: 2.81 },
+            'QCOM': { pe: 17.6, quarters: ['2026 Q1', '2025 Q4', '2025 Q3', '2025 Q2'], eps: [2.69, 2.44, 2.33, 2.02], totalEps: 9.48 }
+        };
+
+        async function fetchDynamicEPS(symbol, currentPrice) {
+            const cleanSym = symbol.toUpperCase().replace('.TW', '').trim();
+            const isTaiwanStock = currentMarket === 'TW';
+
+            if (isTaiwanStock) {
+                try {
+                    const startDate = new Date();
+                    startDate.setFullYear(startDate.getFullYear() - 2);
+                    const startStr = startDate.toISOString().split('T')[0];
+                    const apiUrl = `https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockFinancialStatements&data_id=${cleanSym}&start_date=${startStr}`;
+                    
+                    const response = await fetch(apiUrl);
+                    const result = await response.json();
+
+                    if (result && result.data && Array.isArray(result.data)) {
+                        const epsItems = result.data.filter(d => 
+                            d.type === 'EPS' || 
+                            d.type === '基本每股盈餘（元）' || 
+                            (d.type && d.type.includes('每股盈餘'))
+                        );
+
+                        if (epsItems.length >= 4) {
+                            const uniqueMap = new Map();
+                            epsItems.forEach(item => {
+                                if (!uniqueMap.has(item.date)) {
+                                    uniqueMap.set(item.date, item);
+                                }
+                            });
+                            const sortedList = Array.from(uniqueMap.values()).sort((a, b) => new Date(b.date) - new Date(a.date));
+                            const top4 = sortedList.slice(0, 4);
+
+                            const quarters = top4.map(item => {
+                                const parts = item.date.split('-');
+                                const year = parts[0];
+                                const m = parseInt(parts[1], 10);
+                                let q = 'Q1';
+                                if (m >= 4 && m <= 6) q = 'Q2';
+                                else if (m >= 7 && m <= 9) q = 'Q3';
+                                else if (m >= 10 && m <= 12) q = 'Q4';
+                                return `${year} ${q}`;
+                            });
+
+                            const epsList = top4.map(item => parseFloat((item.value || 0).toFixed(2)));
+                            const totalEps = parseFloat(epsList.reduce((a, b) => a + b, 0).toFixed(2));
+                            const pe = totalEps > 0 ? parseFloat((currentPrice / totalEps).toFixed(1)) : 15.0;
+
+                            return { pe, quarters, epsList, totalEps };
+                        }
+                    }
+                } catch (err) {
+                    console.warn("FinMind 實時 API 抓取失敗，自動啟用靜態備援庫:", err);
+                }
+            }
+
+            return getStockFundamentals(symbol, currentPrice);
+        }
+
         function getStockFundamentals(symbol, currentPrice) {
-            const cleanSym = symbol.toUpperCase().replace('.TW', '');
+            const cleanSym = symbol.toUpperCase().replace('.TW', '').trim();
             if (STOCK_FUNDAMENTALS[cleanSym]) {
                 const item = STOCK_FUNDAMENTALS[cleanSym];
+                const sumEps = item.eps.reduce((a, b) => a + b, 0);
+                const dynamicPe = parseFloat((currentPrice / (sumEps || item.totalEps)).toFixed(1));
                 return {
-                    pe: item.pe,
+                    pe: dynamicPe || item.pe,
+                    quarters: item.quarters || ['2026 Q1', '2025 Q4', '2025 Q3', '2025 Q2'],
                     epsList: item.eps,
-                    totalEps: item.totalEps
+                    totalEps: parseFloat(sumEps.toFixed(2)) || item.totalEps
                 };
             }
 
             let seed = 0;
             for (let i = 0; i < symbol.length; i++) seed += symbol.charCodeAt(i);
-            const estPe = parseFloat((15 + (seed % 18) + (Math.sin(seed) * 3)).toFixed(1));
+            const estPe = parseFloat((12 + (seed % 12) + 0.5).toFixed(1));
             const estTotalEps = parseFloat((currentPrice / estPe).toFixed(2));
 
             const q4 = parseFloat((estTotalEps * 0.28).toFixed(2));
@@ -549,281 +711,141 @@
 
             return {
                 pe: estPe,
+                quarters: ['2026 Q1', '2025 Q4', '2025 Q3', '2025 Q2'],
                 epsList: [q4, q3, q2, q1],
                 totalEps: estTotalEps
             };
-        }
-
-        const STOCK_DATABASE = [
-            { symbol: '2330', name: '台積電', engName: 'TSMC', market: 'TW' },
-            { symbol: '2317', name: '鴻海', engName: 'Hon Hai', market: 'TW' },
-            { symbol: '0050', name: '元大台灣50', engName: 'Yuanta TW Top 50 ETF', market: 'TW' },
-            { symbol: '2454', name: '聯發科', engName: 'MediaTek', market: 'TW' },
-            { symbol: '2308', name: '台達電', engName: 'Delta Electronics', market: 'TW' },
-            { symbol: '2603', name: '長榮', engName: 'Evergreen Marine', market: 'TW' },
-            { symbol: '2382', name: '廣達', engName: 'Quanta Computer', market: 'TW' },
-            { symbol: '2303', name: '聯電', engName: 'UMC', market: 'TW' },
-            { symbol: '3008', name: '大立光', engName: 'Largan Precision', market: 'TW' },
-            { symbol: '8299', name: '群聯', engName: 'Phison Electronics', market: 'TW' },
-            { symbol: '3017', name: '奇鋐', engName: 'AVC', market: 'TW' },
-            { symbol: '3324', name: '雙鴻', engName: 'Auras', market: 'TW' },
-            { symbol: '6223', name: '旺矽', engName: 'MPI Corp', market: 'TW' },
-            { symbol: '2881', name: '富邦金', engName: 'Fubon Financial', market: 'TW' },
-            { symbol: '2882', name: '國泰金', engName: 'Cathay Financial', market: 'TW' },
-            { symbol: '2891', name: '中信金', engName: 'CTBC Financial', market: 'TW' },
-            { symbol: '1519', name: '華城', engName: 'Fortune Electric', market: 'TW' },
-            { symbol: '1503', name: '士電', engName: 'Shihlin Electric', market: 'TW' },
-            { symbol: '1513', name: '中興電', engName: 'Chemik', market: 'TW' },
-            { symbol: '3231', name: '緯創', engName: 'Wistron', market: 'TW' },
-            { symbol: '6669', name: '緯穎', engName: 'Wiwynn', market: 'TW' },
-            { symbol: '3443', name: '創意', engName: 'Global Unichip', market: 'TW' },
-            { symbol: '3661', name: '世芯-KY', engName: 'Alchip', market: 'TW' },
-            { symbol: '2379', name: '瑞昱', engName: 'Realtek', market: 'TW' },
-            { symbol: '3034', name: '聯詠', engName: 'Novatek', market: 'TW' },
-            { symbol: '3035', name: '智原', engName: 'Faraday', market: 'TW' },
-            { symbol: '2357', name: '華碩', engName: 'ASUS', market: 'TW' },
-            { symbol: '2376', name: '技嘉', engName: 'GIGABYTE', market: 'TW' },
-            { symbol: '8069', name: '元太', engName: 'E Ink', market: 'TW' },
-            { symbol: '2002', name: '中鋼', engName: 'China Steel', market: 'TW' },
-
-            { symbol: 'MU', name: '美光', engName: 'Micron Technology', market: 'US' },
-            { symbol: 'NVDA', name: '輝達', engName: 'NVIDIA Corp', market: 'US' },
-            { symbol: 'TSLA', name: '特斯拉', engName: 'Tesla Inc', market: 'US' },
-            { symbol: 'AAPL', name: '蘋果', engName: 'Apple Inc', market: 'US' },
-            { symbol: 'MSFT', name: '微軟', engName: 'Microsoft Corp', market: 'US' },
-            { symbol: 'GOOGL', name: '谷歌 / Alphabet', engName: 'Google Class A', market: 'US' },
-            { symbol: 'AMZN', name: '亞馬遜', engName: 'Amazon.com Inc', market: 'US' },
-            { symbol: 'META', name: 'Meta / 臉書', engName: 'Meta Platforms', market: 'US' },
-            { symbol: 'AMD', name: '超微', engName: 'Advanced Micro Devices', market: 'US' },
-            { symbol: 'AVGO', name: '博通', engName: 'Broadcom Inc', market: 'US' },
-            { symbol: 'ASML', name: '艾斯摩爾', engName: 'ASML Holding', market: 'US' },
-            { symbol: 'AMAT', name: '應用材料', engName: 'Applied Materials', market: 'US' },
-            { symbol: 'QCOM', name: '高通', engName: 'Qualcomm', market: 'US' },
-            { symbol: 'SMCI', name: '美超微', engName: 'Super Micro Computer', market: 'US' },
-            { symbol: 'NFLX', name: '網飛', engName: 'Netflix Inc', market: 'US' },
-            { symbol: 'PLTR', name: '帕蘭提爾', engName: 'Palantir Technologies', market: 'US' },
-            { symbol: 'TSM', name: '台積電ADR', engName: 'Taiwan Semiconductor ADR', market: 'US' },
-            { symbol: 'INTC', name: '英特爾', engName: 'Intel Corp', market: 'US' },
-            { symbol: 'COST', name: '好市多', engName: 'Costco Wholesale', market: 'US' },
-            { symbol: 'SBUX', name: '星巴克', engName: 'Starbucks Corp', market: 'US' },
-            { symbol: 'LLY', name: '禮來', engName: 'Eli Lilly and Company', market: 'US' },
-            { symbol: 'DIS', name: '迪士尼', engName: 'Walt Disney Co', market: 'US' },
-            { symbol: 'COIN', name: 'Coinbase', engName: 'Coinbase Global', market: 'US' },
-            { symbol: 'ARM', name: '安謀', engName: 'Arm Holdings', market: 'US' },
-            { symbol: 'QQQ', name: '納斯達克100 ETF', engName: 'Invesco QQQ Trust', market: 'US' },
-            { symbol: 'SPY', name: '標普500 ETF', engName: 'SPDR S&P 500 ETF', market: 'US' }
-        ];
-
-        let TW_DYNAMIC_STOCK_DATABASE = [];
-
-        const REAL_STOCK_BASE_LEVELS = {
-            '2330': { base: 980, vol: 0.018, trend: 0.0008 },
-            '2317': { base: 185, vol: 0.020, trend: 0.0006 },
-            '0050': { base: 188, vol: 0.012, trend: 0.0005 },
-            '2454': { base: 1220, vol: 0.022, trend: 0.0007 },
-            '8299': { base: 560, vol: 0.025, trend: 0.0008 },
-            'MU': { base: 108, vol: 0.028, trend: 0.0009 },
-            'NVDA': { base: 128, vol: 0.028, trend: 0.0010 },
-            'TSLA': { base: 220, vol: 0.035, trend: 0.0005 },
-            'AAPL': { base: 228, vol: 0.016, trend: 0.0006 },
-            'MSFT': { base: 432, vol: 0.015, trend: 0.0005 },
-            'GOOGL': { base: 175, vol: 0.018, trend: 0.0006 },
-            'AMZN': { base: 186, vol: 0.020, trend: 0.0007 },
-            'META': { base: 512, vol: 0.024, trend: 0.0008 },
-            'AMD': { base: 152, vol: 0.030, trend: 0.0006 },
-            'AVGO': { base: 168, vol: 0.022, trend: 0.0007 },
-            'ASML': { base: 850, vol: 0.025, trend: 0.0008 },
-            'AMAT': { base: 210, vol: 0.024, trend: 0.0007 },
-            'QCOM': { base: 172, vol: 0.022, trend: 0.0006 },
-            'SMCI': { base: 450, vol: 0.045, trend: 0.0005 },
-            'NFLX': { base: 680, vol: 0.022, trend: 0.0008 },
-            'PLTR': { base: 32, vol: 0.032, trend: 0.0012 },
-            'TSM': { base: 172, vol: 0.024, trend: 0.0009 },
-            'INTC': { base: 31, vol: 0.025, trend: 0.0003 },
-            'COST': { base: 880, vol: 0.015, trend: 0.0008 },
-            'SBUX': { base: 95, vol: 0.018, trend: 0.0004 },
-            'QQQ': { base: 480, vol: 0.014, trend: 0.0006 },
-            'SPY': { base: 550, vol: 0.011, trend: 0.0005 }
-        };
-
-        let currentMarket = 'TW';
-        let stockChartInstance = null;
-        let rsiChartInstance = null;
-
-        window.onload = function() {
-            initEventListeners();
-            initTWStockInfoOnline();
-            switchMarket('TW');
-            analyzeStock('2330');
-        };
-
-        async function initTWStockInfoOnline() {
-            try {
-                const res = await fetch('https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockInfo');
-                const data = await res.json();
-                if (data && data.data && data.data.length > 0) {
-                    TW_DYNAMIC_STOCK_DATABASE = data.data.map(item => ({
-                        symbol: item.stock_id,
-                        name: item.stock_name,
-                        engName: item.industry_category || '台股',
-                        market: 'TW'
-                    }));
-                }
-            } catch (err) {
-                console.warn('FinMind stock info fetch warning:', err);
-            }
-        }
-
-        function initEventListeners() {
-            document.getElementById('tabTW').addEventListener('click', () => switchMarket('TW'));
-            document.getElementById('tabUS').addEventListener('click', () => switchMarket('US'));
-            document.getElementById('searchBtn').addEventListener('click', () => triggerSearch());
-            
-            const inputsToListen = ['stockInput', 'targetProfitInput', 'stopLossInput', 'minWinRateInput', 'backtestDaysInput', 'strategySelect'];
-            inputsToListen.forEach(id => {
-                const el = document.getElementById(id);
-                if (el) {
-                    el.addEventListener('change', (e) => {
-                        if (id === 'strategySelect') triggerSearch();
-                    });
-                    el.addEventListener('keydown', (e) => {
-                        if (e.key === 'Enter') {
-                            document.getElementById('autocompleteMenu').classList.add('hidden');
-                            triggerSearch();
-                        }
-                    });
-                }
-            });
-
-            const stockInput = document.getElementById('stockInput');
-            stockInput.addEventListener('input', (e) => {
-                handleAutocomplete(e.target.value.trim());
-            });
-
-            document.addEventListener('click', (e) => {
-                if (!e.target.closest('#stockInput') && !e.target.closest('#autocompleteMenu')) {
-                    document.getElementById('autocompleteMenu').classList.add('hidden');
-                }
-            });
-        }
-
-        function switchMarket(market) {
-            currentMarket = market;
-            const tabTW = document.getElementById('tabTW');
-            const tabUS = document.getElementById('tabUS');
-            const marketLabel = document.getElementById('selectedMarketLabel');
-
-            if (market === 'TW') {
-                tabTW.className = "market-tab px-5 py-2 text-xs font-bold rounded-lg transition-all bg-emerald-600 text-white shadow";
-                tabUS.className = "market-tab px-5 py-2 text-xs font-bold rounded-lg transition-all text-slate-400 hover:text-slate-200";
-                marketLabel.innerText = "台股 (TW)";
-                marketLabel.className = "text-emerald-400 font-bold";
-                document.getElementById('stockInput').value = '2330';
-            } else {
-                tabUS.className = "market-tab px-5 py-2 text-xs font-bold rounded-lg transition-all bg-emerald-600 text-white shadow";
-                tabTW.className = "market-tab px-5 py-2 text-xs font-bold rounded-lg transition-all text-slate-400 hover:text-slate-200";
-                marketLabel.innerText = "美股 (US)";
-                marketLabel.className = "text-emerald-400 font-bold";
-                document.getElementById('stockInput').value = 'MU';
-            }
-
-            renderPresetButtons();
         }
 
         function renderPresetButtons() {
             const container = document.getElementById('presetButtonsContainer');
             if (!container) return;
 
-            const presets = currentMarket === 'TW' 
-                ? [
-                    { s: '2330', n: '台積電' },
-                    { s: '2317', n: '鴻海' },
-                    { s: '8299', n: '群聯' },
-                    { s: '0050', n: '台灣50' },
-                    { s: '2454', n: '聯發科' }
-                  ]
-                : [
-                    { s: 'MU', n: '美光' },
-                    { s: 'NVDA', n: '輝達' },
-                    { s: 'TSLA', n: '特斯拉' },
-                    { s: 'AAPL', n: '蘋果' },
-                    { s: 'MSFT', n: '微軟' },
-                    { s: 'QCOM', n: '高通' }
-                  ];
-
-            container.innerHTML = presets.map(p => `
-                <button onclick="presetSelect('${p.s}')" class="px-2.5 py-1 text-xs bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-emerald-400 border border-slate-800 rounded-lg transition-all font-mono">
-                    ${p.s} ${p.n}
+            const targets = STOCK_DATABASE.filter(s => s.market === currentMarket).slice(0, 8);
+            container.innerHTML = targets.map(s => `
+                <button onclick="selectStock('${s.symbol}')" class="px-2.5 py-1 text-xs bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-emerald-400 border border-slate-800 hover:border-emerald-500/50 rounded-lg transition-all font-mono">
+                    ${s.symbol} ${s.name}
                 </button>
             `).join('');
         }
 
-        function presetSelect(sym) {
-            document.getElementById('stockInput').value = sym;
-            triggerSearch();
-        }
-
-        function triggerSearch() {
-            const val = document.getElementById('stockInput').value.trim();
-            if (!val) return;
-            analyzeStock(val);
-        }
-
-        function handleAutocomplete(query) {
+        function selectStock(symbol) {
+            document.getElementById('stockInput').value = symbol;
             const menu = document.getElementById('autocompleteMenu');
-            if (!query) {
-                menu.classList.add('hidden');
+            if (menu) menu.classList.add('hidden');
+            analyzeStock(symbol);
+        }
+
+        function handleAutocompleteInput(query) {
+            const menu = document.getElementById('autocompleteMenu');
+            if (!menu) return;
+
+            const q = (query || '').trim().toLowerCase();
+
+            // 整合資料庫並去除重複項目
+            const combinedPool = [...STOCK_DATABASE, ...TW_DYNAMIC_STOCK_DATABASE];
+            const uniqueMap = new Map();
+            combinedPool.forEach(s => {
+                if (!s || !s.symbol) return;
+                const market = s.market || (s.symbol.match(/^\d+$/) ? 'TW' : 'US');
+                const key = `${s.symbol.toUpperCase()}_${market}`;
+                if (!uniqueMap.has(key)) {
+                    uniqueMap.set(key, {
+                        symbol: s.symbol,
+                        name: s.name || s.symbol,
+                        engName: s.engName || s.symbol,
+                        market: market
+                    });
+                }
+            });
+            const pool = Array.from(uniqueMap.values());
+
+            if (!q) {
+                // 輸入空白時，預設顯示當前市場前 12 檔熱門推薦標的
+                const defaultList = pool.filter(s => s.market === currentMarket).slice(0, 12);
+                renderAutocompleteItems(menu, defaultList, "");
                 return;
             }
 
-            const rawQuery = query.trim();
-            const qUpper = rawQuery.toUpperCase();
+            // 搜尋包含代號、中文或英文名稱之標的
+            const matches = pool.filter(s => 
+                s.symbol.toLowerCase().includes(q) || 
+                s.name.toLowerCase().includes(q) || 
+                (s.engName && s.engName.toLowerCase().includes(q))
+            );
 
-            const combinedDB = currentMarket === 'TW' 
-                ? [...STOCK_DATABASE.filter(s => s.market === 'TW'), ...TW_DYNAMIC_STOCK_DATABASE]
-                : STOCK_DATABASE.filter(s => s.market === 'US');
+            // 排序：優先完全比對、優先當前選擇之市場
+            matches.sort((a, b) => {
+                const aExact = (a.symbol.toLowerCase() === q || a.name.toLowerCase() === q) ? 1 : 0;
+                const bExact = (b.symbol.toLowerCase() === q || b.name.toLowerCase() === q) ? 1 : 0;
+                if (aExact !== bExact) return bExact - aExact;
 
-            const matchesMap = new Map();
-            combinedDB.forEach(s => {
-                if (
-                    s.symbol.toUpperCase().includes(qUpper) || 
-                    s.name.includes(rawQuery) || 
-                    (s.engName && s.engName.toUpperCase().includes(qUpper))
-                ) {
-                    if (!matchesMap.has(s.symbol)) {
-                        matchesMap.set(s.symbol, s);
-                    }
-                }
+                const aCurrent = a.market === currentMarket ? 0 : 1;
+                const bCurrent = b.market === currentMarket ? 0 : 1;
+                if (aCurrent !== bCurrent) return aCurrent - bCurrent;
+
+                return 0;
             });
 
-            const matches = Array.from(matchesMap.values()).slice(0, 8);
+            renderAutocompleteItems(menu, matches.slice(0, 15), q);
+        }
 
-            let htmlContent = matches.map(s => `
-                <div class="autocomplete-item px-4 py-2.5 hover:bg-slate-800 cursor-pointer flex items-center justify-between text-xs transition-colors" data-symbol="${s.symbol}">
-                    <div class="flex items-center gap-2">
-                        <span class="font-bold font-mono text-emerald-400">${s.symbol}</span>
-                        <span class="text-slate-200 font-medium">${s.name}</span>
-                        <span class="text-slate-500 text-[11px]">(${s.engName || ''})</span>
+        function renderAutocompleteItems(menu, items, query) {
+            const qUpper = (query || '').toUpperCase();
+            let htmlContent = '';
+
+            if (items.length > 0) {
+                htmlContent = items.map(s => `
+                    <div class="autocomplete-item px-4 py-2.5 hover:bg-slate-800 cursor-pointer flex items-center justify-between text-xs transition-colors" data-symbol="${s.symbol}" data-market="${s.market}">
+                        <div class="flex items-center gap-2">
+                            <span class="font-mono font-bold text-emerald-400">${s.symbol}</span>
+                            <span class="text-slate-200 font-medium">${s.name}</span>
+                            <span class="text-slate-400 text-[10px] font-mono">(${s.engName || s.symbol})</span>
+                        </div>
+                        <span class="px-2 py-0.5 rounded text-[10px] font-semibold ${s.market === 'TW' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/30' : 'bg-purple-500/10 text-purple-400 border border-purple-500/30'}">
+                            ${s.market === 'TW' ? '台股' : '美股'}
+                        </span>
                     </div>
-                    <span class="px-2 py-0.5 rounded text-[10px] font-semibold ${s.market === 'TW' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/30' : 'bg-purple-500/10 text-purple-400 border border-purple-500/30'}">
-                        ${s.market === 'TW' ? '台股' : '美股'}
-                    </span>
-                </div>
-            `).join('');
+                `).join('');
+            }
 
-            htmlContent += `
-                <div class="autocomplete-item px-4 py-2.5 bg-slate-950 hover:bg-slate-800 cursor-pointer flex items-center justify-between text-xs text-cyan-400 font-mono transition-colors border-t border-slate-800" data-symbol="${qUpper}">
-                    <span>🔍 直接分析此代碼/名稱：<strong>${qUpper}</strong></span>
-                    <span class="text-slate-500 text-[10px]">(${currentMarket === 'TW' ? '台股' : '美股'})</span>
-                </div>
-            `;
+            if (qUpper) {
+                htmlContent += `
+                    <div class="autocomplete-item px-4 py-2.5 bg-slate-950 hover:bg-slate-800 cursor-pointer flex items-center justify-between text-xs text-cyan-400 font-mono transition-colors border-t border-slate-800" data-symbol="${qUpper}" data-market="${currentMarket}">
+                        <span>🔍 直接分析此代碼/名稱：<strong>${qUpper}</strong></span>
+                        <span class="text-slate-500 text-[10px]">(${currentMarket === 'TW' ? '台股' : '美股'})</span>
+                    </div>
+                `;
+            }
+
+            if (!htmlContent) {
+                menu.classList.add('hidden');
+                return;
+            }
 
             menu.innerHTML = htmlContent;
             menu.classList.remove('hidden');
 
             menu.querySelectorAll('.autocomplete-item').forEach(item => {
                 item.addEventListener('click', (e) => {
+                    e.stopPropagation();
                     const sym = e.currentTarget.getAttribute('data-symbol');
+                    const itemMarket = e.currentTarget.getAttribute('data-market');
+                    if (itemMarket && itemMarket !== currentMarket) {
+                        currentMarket = itemMarket;
+                        const tabTW = document.getElementById('tabTW');
+                        const tabUS = document.getElementById('tabUS');
+                        if (currentMarket === 'TW' && tabTW && tabUS) {
+                            tabTW.className = "market-tab flex-1 sm:flex-initial px-4 sm:px-5 py-2 text-xs font-bold rounded-lg transition-all bg-emerald-600 text-white shadow";
+                            tabUS.className = "market-tab flex-1 sm:flex-initial px-4 sm:px-5 py-2 text-xs font-bold rounded-lg transition-all text-slate-400 hover:text-slate-200";
+                            safeSetText('selectedMarketLabel', '台股 (TW)');
+                        } else if (currentMarket === 'US' && tabTW && tabUS) {
+                            tabUS.className = "market-tab flex-1 sm:flex-initial px-4 sm:px-5 py-2 text-xs font-bold rounded-lg transition-all bg-emerald-600 text-white shadow";
+                            tabTW.className = "market-tab flex-1 sm:flex-initial px-4 sm:px-5 py-2 text-xs font-bold rounded-lg transition-all text-slate-400 hover:text-slate-200";
+                            safeSetText('selectedMarketLabel', '美股 (US)');
+                        }
+                        renderPresetButtons();
+                    }
                     document.getElementById('stockInput').value = sym;
                     menu.classList.add('hidden');
                     analyzeStock(sym);
@@ -835,23 +857,21 @@
             const cleanQuery = inputQuery.trim();
             const upperQuery = cleanQuery.toUpperCase();
 
-            const allTW = [...STOCK_DATABASE.filter(s => s.market === 'TW'), ...TW_DYNAMIC_STOCK_DATABASE];
-            const allUS = STOCK_DATABASE.filter(s => s.market === 'US');
-            const targetDB = currentMarket === 'TW' ? allTW : allUS;
-
-            const matched = targetDB.find(s => 
+            const combinedPool = [...STOCK_DATABASE, ...TW_DYNAMIC_STOCK_DATABASE];
+            const matched = combinedPool.find(s => 
                 s.symbol.toUpperCase() === upperQuery || 
                 s.name === cleanQuery || 
                 (s.engName && s.engName.toUpperCase() === upperQuery)
             );
 
             if (matched) {
+                const itemMarket = matched.market || (matched.symbol.match(/^\d+$/) ? 'TW' : 'US');
                 return {
                     symbol: matched.symbol,
                     name: matched.name,
                     engName: matched.engName || matched.symbol,
                     displayName: `${matched.symbol} ${matched.name} (${matched.engName || matched.symbol})`,
-                    market: matched.market
+                    market: itemMarket
                 };
             }
 
@@ -880,19 +900,61 @@
                     const startStr = startDate.toISOString().split('T')[0];
 
                     const apiUrl = `https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockPrice&data_id=${cleanId}&start_date=${startStr}`;
-                    const response = await fetch(apiUrl);
-                    const result = await response.json();
+                    const instUrl = `https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockInstitutionalInvestorsBuySell&data_id=${cleanId}&start_date=${startStr}`;
+
+                    const [priceResponse, instResponse] = await Promise.all([
+                        fetch(apiUrl),
+                        fetch(instUrl).catch(e => { console.warn("Inst API fetch error:", e); return null; })
+                    ]);
+
+                    const result = await priceResponse.json();
+                    let instMap = {};
+
+                    if (instResponse) {
+                        try {
+                            const instJson = await instResponse.json();
+                            if (instJson && instJson.data && Array.isArray(instJson.data)) {
+                                instJson.data.forEach(item => {
+                                    if (!item.date) return;
+                                    if (!instMap[item.date]) {
+                                        instMap[item.date] = { foreign: 0, trust: 0, dealer: 0, total: 0 };
+                                    }
+                                    const netShares = (item.buy || 0) - (item.sell || 0);
+                                    const netLots = Math.round(netShares / 1000); // 轉換為張數
+
+                                    const name = item.name || '';
+                                    if (name.includes('Foreign') || name.includes('外資')) {
+                                        instMap[item.date].foreign += netLots;
+                                    } else if (name.includes('Trust') || name.includes('投信')) {
+                                        instMap[item.date].trust += netLots;
+                                    } else if (name.includes('Dealer') || name.includes('自營商')) {
+                                        instMap[item.date].dealer += netLots;
+                                    }
+                                    instMap[item.date].total += netLots;
+                                });
+                            }
+                        } catch (err) {
+                            console.warn("Error parsing institutional data:", err);
+                        }
+                    }
 
                     if (result && result.data && result.data.length >= 30) {
-                        rawCandles = result.data.map(d => ({
-                            dateStr: d.date,
-                            open: parseFloat((d.open || d.close).toFixed(2)),
-                            high: parseFloat((d.max || d.close).toFixed(2)),
-                            low: parseFloat((d.min || d.close).toFixed(2)),
-                            close: parseFloat((d.close).toFixed(2)),
-                            volume: d.Trading_Volume || 0
-                        }));
-                        sourceText = `FinMind 官方 API (${cleanId} 真實台股與三大法人行情)`;
+                        rawCandles = result.data.map(d => {
+                            const instData = instMap[d.date] || null;
+                            return {
+                                dateStr: d.date,
+                                open: parseFloat((d.open || d.close).toFixed(2)),
+                                high: parseFloat((d.max || d.close).toFixed(2)),
+                                low: parseFloat((d.min || d.close).toFixed(2)),
+                                close: parseFloat((d.close).toFixed(2)),
+                                volume: d.Trading_Volume || 0,
+                                instForeign: instData ? instData.foreign : undefined,
+                                instTrust: instData ? instData.trust : undefined,
+                                instDealer: instData ? instData.dealer : undefined,
+                                instTotal: instData ? instData.total : undefined
+                            };
+                        });
+                        sourceText = `FinMind 官方 API (${cleanId} 真實台股價格與三大法人籌碼)`;
                     }
                 } catch (err) {
                     console.warn("FinMind API fetch fallback triggered:", err);
@@ -1077,14 +1139,15 @@
                     c.stochK = 50;
                 }
 
-                // 納入三大法人（外資、投信、自營商）模擬與實時量化籌碼數據
-                const priceDiff = i > 0 ? c.close - candles[i-1].close : 0;
-                const seedFactor = Math.sin(i * 13.57 + c.close);
-                
-                c.instForeign = Math.round((priceDiff * 120) + (seedFactor * 1500));
-                c.instTrust = Math.round((priceDiff * 65) + (Math.cos(i) * 600));
-                c.instDealer = Math.round((priceDiff * 25) + (Math.sin(i * 2) * 300));
-                c.instTotal = c.instForeign + c.instTrust + c.instDealer;
+                if (c.instTotal === undefined || c.instTotal === null) {
+                    const priceDiff = i > 0 ? c.close - candles[i-1].close : 0;
+                    const seedFactor = Math.sin(i * 13.57 + c.close);
+                    
+                    c.instForeign = Math.round((priceDiff * 120) + (seedFactor * 1500));
+                    c.instTrust = Math.round((priceDiff * 65) + (Math.cos(i) * 600));
+                    c.instDealer = Math.round((priceDiff * 25) + (Math.sin(i * 2) * 300));
+                    c.instTotal = c.instForeign + c.instTrust + c.instDealer;
+                }
             }
 
             for (let i = 0; i < n; i++) {
@@ -1100,9 +1163,6 @@
         }
 
         function getSystemAlgorithms(tpPct = 15, slPct = 10) {
-            const tpMultiplier = 1 + (tpPct / 100);
-            const slMultiplier = 1 - (slPct / 100);
-
             return [
                 {
                     id: 'algo_rsi_oversold',
@@ -1263,13 +1323,11 @@
             ];
         }
 
-        // 核心更新：自動測試全數 12 種策略並依「最佳勝率」、「最多勝敗次數」或「最佳歷史績效」挑選最佳模型
         function runSequentialMultiAlgoBacktest(candles, tpPct = 15, slPct = 10, selectedAlgoId = 'auto', minWinRate = 75) {
             const tpMultiplier = 1 + (tpPct / 100);
             const slMultiplier = 1 - (slPct / 100);
 
             const ALGORITHMS = getSystemAlgorithms(tpPct, slPct);
-
             const isAutoMode = selectedAlgoId === 'auto' || selectedAlgoId === 'auto_max_trades' || selectedAlgoId === 'auto_max_return';
 
             const targetAlgos = isAutoMode
@@ -1391,36 +1449,22 @@
                 }
             }
 
-            // 根據選定模式進行多優先級排序：
             if (qualifiedResults.length > 0) {
                 if (selectedAlgoId === 'auto_max_trades') {
-                    // 最多勝敗次數優先，勝率次之，累積報酬率再次之
                     qualifiedResults.sort((a, b) => {
-                        if (b.totalEvaluated !== a.totalEvaluated) {
-                            return b.totalEvaluated - a.totalEvaluated;
-                        }
-                        if (b.winRate !== a.winRate) {
-                            return b.winRate - a.winRate;
-                        }
+                        if (b.totalEvaluated !== a.totalEvaluated) return b.totalEvaluated - a.totalEvaluated;
+                        if (b.winRate !== a.winRate) return b.winRate - a.winRate;
                         return b.totalReturnPercent - a.totalReturnPercent;
                     });
                 } else if (selectedAlgoId === 'auto_max_return') {
-                    // 歷史量化交易績效最佳優先，勝率次之，勝敗次數再次之
                     qualifiedResults.sort((a, b) => {
-                        if (b.totalReturnPercent !== a.totalReturnPercent) {
-                            return b.totalReturnPercent - a.totalReturnPercent;
-                        }
-                        if (b.winRate !== a.winRate) {
-                            return b.winRate - a.winRate;
-                        }
+                        if (b.totalReturnPercent !== a.totalReturnPercent) return b.totalReturnPercent - a.totalReturnPercent;
+                        if (b.winRate !== a.winRate) return b.winRate - a.winRate;
                         return b.totalEvaluated - a.totalEvaluated;
                     });
                 } else {
-                    // 自動最佳勝率：勝率優先，累積報酬率次之
                     qualifiedResults.sort((a, b) => {
-                        if (b.winRate !== a.winRate) {
-                            return b.winRate - a.winRate;
-                        }
+                        if (b.winRate !== a.winRate) return b.winRate - a.winRate;
                         return b.totalReturnPercent - a.totalReturnPercent;
                     });
                 }
@@ -1447,16 +1491,13 @@
             };
         }
 
-        // 算算單一策略對未來 5 個交易日之每日價位與 [漲/跌] 趨勢
         function predictAlgorithm5Days(candles, algorithm) {
             if (!candles || candles.length < 5) return [];
             const lastCandle = candles[candles.length - 1];
-            const prevCandle = candles.length >= 2 ? candles[candles.length - 2] : lastCandle;
             
             let basePrice = lastCandle.close;
             let lastDate = new Date(lastCandle.dateStr);
 
-            // 算算指標動能導向
             let momentumScore = 0;
             if (lastCandle.rsi < 35) momentumScore += 1.5;
             else if (lastCandle.rsi > 65) momentumScore -= 1.2;
@@ -1475,7 +1516,6 @@
             let currentPredictedPrice = basePrice;
 
             for (let day = 1; day <= 5; day++) {
-                // 增加未來日期（自動避開週六週日）
                 lastDate.setDate(lastDate.getDate() + 1);
                 while (lastDate.getDay() === 0 || lastDate.getDay() === 6) {
                     lastDate.setDate(lastDate.getDate() + 1);
@@ -1499,7 +1539,6 @@
             return daysResult;
         }
 
-        // 統計所有 12 種策略計算未來 5 天每日看漲/看跌總數與共識結果
         function predictAllStrategiesConsensus(candles, tpPct = 15, slPct = 10) {
             const allAlgos = getSystemAlgorithms(tpPct, slPct);
             const allAlgoPredictions = allAlgos.map(algo => predictAlgorithm5Days(candles, algo));
@@ -1621,6 +1660,9 @@
             document.getElementById('dataSourceText').innerText = `數據源：${sourceText}`;
 
             const candlesWithIndicators = calculateTechnicalIndicators(candles);
+            const lastPrice = candlesWithIndicators[candlesWithIndicators.length - 1].close;
+            const fundamentals = await fetchDynamicEPS(stockInfo.symbol, lastPrice);
+
             const backtestRes = runSequentialMultiAlgoBacktest(candlesWithIndicators, tpPct, slPct, selectedAlgoId, minWinRate);
             
             const activeAlgo = backtestRes.success ? backtestRes.algorithm : null;
@@ -1630,7 +1672,7 @@
             const selectedAlgo5Days = predictAlgorithm5Days(candlesWithIndicators, activeAlgo || getSystemAlgorithms(tpPct, slPct)[0]);
 
             updateAlgoStatusBanner(backtestRes, stockInfo, tpPct, slPct, daysCount, consensus5Days, minWinRate);
-            updateDashboardUI(backtestRes, futureProj, candlesWithIndicators, stockInfo, tpPct, slPct, selectedAlgo5Days, minWinRate);
+            updateDashboardUI(backtestRes, futureProj, candlesWithIndicators, stockInfo, tpPct, slPct, selectedAlgo5Days, minWinRate, fundamentals);
             renderCharts(candlesWithIndicators, backtestRes, tpPct, slPct);
             renderTradeTable(backtestRes.trades);
         }
@@ -1687,7 +1729,7 @@
             }
         }
 
-        function updateDashboardUI(backtestRes, futureProj, candles, stockInfo, tpPct, slPct, selectedAlgo5Days = [], minWinRate = 75) {
+        function updateDashboardUI(backtestRes, futureProj, candles, stockInfo, tpPct, slPct, selectedAlgo5Days = [], minWinRate = 75, fundamentals = null) {
             const lastCandle = candles[candles.length - 1];
 
             const prevClose = candles.length >= 2 ? candles[candles.length - 2].close : lastCandle.close;
@@ -1700,8 +1742,17 @@
             safeSetText('chartPriceChange', `${diffSign}${priceDiff.toFixed(2)} (${diffSign}${priceDiffPct.toFixed(2)}%)`);
             safeSetClass('chartPriceChange', `text-xs font-mono ${diffClass}`);
 
-            const fundamentals = getStockFundamentals(stockInfo.symbol, lastCandle.close);
-            safeSetText('peRatioBadge', `本益比 P/E: ${fundamentals.pe} 倍`);
+            if (!fundamentals) {
+                fundamentals = getStockFundamentals(stockInfo.symbol, lastCandle.close);
+            }
+            const dynamicPe = parseFloat((lastCandle.close / fundamentals.totalEps).toFixed(1));
+            safeSetText('peRatioBadge', `本益比 P/E: ${dynamicPe} 倍`);
+
+            safeSetText('epsLabelQ4', `${fundamentals.quarters[0]} EPS (最近)`);
+            safeSetText('epsLabelQ3', `${fundamentals.quarters[1]} EPS`);
+            safeSetText('epsLabelQ2', `${fundamentals.quarters[2]} EPS`);
+            safeSetText('epsLabelQ1', `${fundamentals.quarters[3]} EPS`);
+
             safeSetText('epsQ4', `$${fundamentals.epsList[0].toFixed(2)}`);
             safeSetText('epsQ3', `$${fundamentals.epsList[1].toFixed(2)}`);
             safeSetText('epsQ2', `$${fundamentals.epsList[2].toFixed(2)}`);
@@ -1710,10 +1761,10 @@
 
             let peEval = "合理估值";
             let peEvalClass = "text-emerald-400 font-bold";
-            if (fundamentals.pe < 15) {
+            if (dynamicPe < 15) {
                 peEval = "價值偏低 (低估)";
                 peEvalClass = "text-cyan-400 font-bold";
-            } else if (fundamentals.pe > 35) {
+            } else if (dynamicPe > 35) {
                 peEval = "高成長 / 高估值";
                 peEvalClass = "text-amber-400 font-bold";
             }
@@ -2200,6 +2251,72 @@
                 tableBody.appendChild(tr);
             });
         }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const stockInput = document.getElementById('stockInput');
+            const searchBtn = document.getElementById('searchBtn');
+            const tabTW = document.getElementById('tabTW');
+            const tabUS = document.getElementById('tabUS');
+            const menu = document.getElementById('autocompleteMenu');
+
+            fetchFullStockDatabase();
+
+            if (tabTW && tabUS) {
+                tabTW.addEventListener('click', () => {
+                    currentMarket = 'TW';
+                    tabTW.className = "market-tab flex-1 sm:flex-initial px-4 sm:px-5 py-2 text-xs font-bold rounded-lg transition-all bg-emerald-600 text-white shadow";
+                    tabUS.className = "market-tab flex-1 sm:flex-initial px-4 sm:px-5 py-2 text-xs font-bold rounded-lg transition-all text-slate-400 hover:text-slate-200";
+                    safeSetText('selectedMarketLabel', '台股 (TW)');
+                    stockInput.value = '2330';
+                    renderPresetButtons();
+                    analyzeStock('2330');
+                });
+
+                tabUS.addEventListener('click', () => {
+                    currentMarket = 'US';
+                    tabUS.className = "market-tab flex-1 sm:flex-initial px-4 sm:px-5 py-2 text-xs font-bold rounded-lg transition-all bg-emerald-600 text-white shadow";
+                    tabTW.className = "market-tab flex-1 sm:flex-initial px-4 sm:px-5 py-2 text-xs font-bold rounded-lg transition-all text-slate-400 hover:text-slate-200";
+                    safeSetText('selectedMarketLabel', '美股 (US)');
+                    stockInput.value = 'MU';
+                    renderPresetButtons();
+                    analyzeStock('MU');
+                });
+            }
+
+            if (stockInput) {
+                // 輸入時立即觸發並顯示匹配項目
+                stockInput.addEventListener('input', (e) => handleAutocompleteInput(e.target.value));
+                // 聚焦時立即跳出建議選單
+                stockInput.addEventListener('focus', (e) => handleAutocompleteInput(e.target.value));
+                // 點擊搜尋框時阻止關閉並彈出選單
+                stockInput.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    handleAutocompleteInput(stockInput.value);
+                });
+                stockInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        if (menu) menu.classList.add('hidden');
+                        analyzeStock(stockInput.value);
+                    }
+                });
+            }
+
+            if (searchBtn) {
+                searchBtn.addEventListener('click', () => {
+                    if (menu) menu.classList.add('hidden');
+                    analyzeStock(stockInput ? stockInput.value : '2330');
+                });
+            }
+
+            document.addEventListener('click', (e) => {
+                if (menu && !menu.contains(e.target) && e.target !== stockInput) {
+                    menu.classList.add('hidden');
+                }
+            });
+
+            renderPresetButtons();
+            analyzeStock('2330');
+        });
     </script>
 </body>
 </html>
