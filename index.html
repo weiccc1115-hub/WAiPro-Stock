@@ -497,6 +497,15 @@
         <p>WAiPro Multi-Algorithm Stock Analytics System © 2026. 數據源：FinMind 官方台股 API & Yahoo Finance 美股實時行情。本系統僅供量化研究，投資請審慎評估風險。</p>
     </footer>
 
+    <!-- 回頁面頂部懸浮按鈕 -->
+    <button id="backToTopBtn" onclick="scrollToTop()" 
+            class="fixed bottom-6 right-6 z-50 p-3.5 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 active:scale-95 text-white rounded-full shadow-2xl border border-emerald-400/30 transition-all duration-300 opacity-0 pointer-events-none transform translate-y-4 flex items-center justify-center group"
+            title="回到頂部">
+        <svg class="w-5 h-5 group-hover:-translate-y-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
+        </svg>
+    </button>
+
     <script>
         const safeSetText = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
         const safeSetHTML = (id, val) => { const el = document.getElementById(id); if (el) el.innerHTML = val; };
@@ -507,7 +516,6 @@
         let rsiChartInstance = null;
         let TW_DYNAMIC_STOCK_DATABASE = [];
 
-        // 包含完整台美股熱門標的與權值股之預設資料庫
         const STOCK_DATABASE = [
             // 台股熱門權值股
             { symbol: '2330', name: '台積電', engName: 'TSMC', market: 'TW' },
@@ -530,15 +538,6 @@
             { symbol: '6669', name: '緯穎', engName: 'Wiwynn', market: 'TW' },
             { symbol: '2301', name: '光寶科', engName: 'LiteOn', market: 'TW' },
             { symbol: '1513', name: '中興電', engName: 'CHEM', market: 'TW' },
-            { symbol: '2881', name: '富邦金', engName: 'Fubon', market: 'TW' },
-            { symbol: '2882', name: '國泰金', engName: 'Cathay', market: 'TW' },
-            { symbol: '2891', name: '中信金', engName: 'CTBC', market: 'TW' },
-            { symbol: '3661', name: '世芯-KY', engName: 'Alchip', market: 'TW' },
-            { symbol: '5269', name: '祥碩', engName: 'Asmedia', market: 'TW' },
-            { symbol: '3034', name: '聯詠', engName: 'Novatek', market: 'TW' },
-            { symbol: '2379', name: '瑞昱', engName: 'Realtek', market: 'TW' },
-            { symbol: '3017', name: '奇鋐', engName: 'AVC', market: 'TW' },
-            { symbol: '3324', name: '雙鴻', engName: 'Auras', market: 'TW' },
 
             // 美股熱門巨頭
             { symbol: 'MU', name: '美光科技', engName: 'Micron', market: 'US' },
@@ -593,12 +592,7 @@
             'NVDA': { base: 125, vol: 0.035, trend: 0.0015 },
             'TSLA': { base: 220, vol: 0.040, trend: 0.0010 },
             'AAPL': { base: 225, vol: 0.018, trend: 0.0006 },
-            'MSFT': { base: 440, vol: 0.016, trend: 0.0007 },
-            'GOOGL': { base: 175, vol: 0.020, trend: 0.0006 },
-            'AMZN': { base: 185, vol: 0.022, trend: 0.0008 },
-            'META': { base: 500, vol: 0.028, trend: 0.0011 },
-            'AMD': { base: 150, vol: 0.034, trend: 0.0010 },
-            'QCOM': { base: 170, vol: 0.026, trend: 0.0007 }
+            'MSFT': { base: 440, vol: 0.016, trend: 0.0007 }
         };
 
         const STOCK_FUNDAMENTALS = {
@@ -612,20 +606,12 @@
             '2382': { pe: 18.5, quarters: ['2026 Q1', '2025 Q4', '2025 Q3', '2025 Q2'], eps: [3.85, 3.80, 4.12, 3.92], totalEps: 15.69 },
             '2303': { pe: 12.2, quarters: ['2026 Q1', '2025 Q4', '2025 Q3', '2025 Q2'], eps: [0.84, 1.15, 1.16, 1.11], totalEps: 4.26 },
             '3008': { pe: 14.2, quarters: ['2026 Q1', '2025 Q4', '2025 Q3', '2025 Q2'], eps: [45.80, 42.50, 50.10, 37.20], totalEps: 175.60 },
-            '2357': { pe: 10.8, quarters: ['2026 Q1', '2025 Q4', '2025 Q3', '2025 Q2'], eps: [11.50, 11.20, 14.80, 15.90], totalEps: 53.40 },
-            '3231': { pe: 16.5, quarters: ['2026 Q1', '2025 Q4', '2025 Q3', '2025 Q2'], eps: [1.22, 1.85, 1.95, 1.80], totalEps: 6.82 },
-            '6669': { pe: 22.8, quarters: ['2026 Q1', '2025 Q4', '2025 Q3', '2025 Q2'], eps: [26.90, 35.80, 38.20, 32.50], totalEps: 133.40 },
 
             'MU':   { pe: 25.5, quarters: ['2026 Q2', '2026 Q1', '2025 Q4', '2025 Q3'], eps: [12.20, 4.78, 1.18, 0.92], totalEps: 19.08 },
             'NVDA': { pe: 32.2, quarters: ['2026 Q1', '2025 Q4', '2025 Q3', '2025 Q2'], eps: [1.87, 1.62, 1.30, 1.04], totalEps: 5.83 },
             'TSLA': { pe: 65.4, quarters: ['2026 Q1', '2025 Q4', '2025 Q3', '2025 Q2'], eps: [0.41, 0.71, 0.52, 0.62], totalEps: 2.26 },
             'AAPL': { pe: 30.1, quarters: ['2026 Q2', '2026 Q1', '2025 Q4', '2025 Q3'], eps: [2.01, 2.42, 1.64, 1.40], totalEps: 7.47 },
-            'MSFT': { pe: 32.8, quarters: ['2026 Q1', '2025 Q4', '2025 Q3', '2025 Q2'], eps: [3.30, 3.20, 2.94, 2.99], totalEps: 12.43 },
-            'GOOGL':{ pe: 21.5, quarters: ['2026 Q1', '2025 Q4', '2025 Q3', '2025 Q2'], eps: [2.12, 1.89, 1.89, 1.64], totalEps: 7.54 },
-            'AMZN': { pe: 38.2, quarters: ['2026 Q1', '2025 Q4', '2025 Q3', '2025 Q2'], eps: [2.78, 1.89, 1.46, 1.29], totalEps: 7.42 },
-            'META': { pe: 24.3, quarters: ['2026 Q1', '2025 Q4', '2025 Q3', '2025 Q2'], eps: [7.31, 5.16, 4.71, 5.33], totalEps: 22.51 },
-            'AMD':  { pe: 35.1, quarters: ['2026 Q1', '2025 Q4', '2025 Q3', '2025 Q2'], eps: [0.92, 0.69, 0.62, 0.58], totalEps: 2.81 },
-            'QCOM': { pe: 17.6, quarters: ['2026 Q1', '2025 Q4', '2025 Q3', '2025 Q2'], eps: [2.69, 2.44, 2.33, 2.02], totalEps: 9.48 }
+            'MSFT': { pe: 32.8, quarters: ['2026 Q1', '2025 Q4', '2025 Q3', '2025 Q2'], eps: [3.30, 3.20, 2.94, 2.99], totalEps: 12.43 }
         };
 
         async function fetchDynamicEPS(symbol, currentPrice) {
@@ -678,7 +664,7 @@
                         }
                     }
                 } catch (err) {
-                    console.warn("FinMind 實時 API 抓取失敗，自動啟用靜態備援庫:", err);
+                    console.warn("FinMind API fetch fallback triggered:", err);
                 }
             }
 
@@ -742,7 +728,6 @@
 
             const q = (query || '').trim().toLowerCase();
 
-            // 整合資料庫並去除重複項目
             const combinedPool = [...STOCK_DATABASE, ...TW_DYNAMIC_STOCK_DATABASE];
             const uniqueMap = new Map();
             combinedPool.forEach(s => {
@@ -761,20 +746,17 @@
             const pool = Array.from(uniqueMap.values());
 
             if (!q) {
-                // 輸入空白時，預設顯示當前市場前 12 檔熱門推薦標的
                 const defaultList = pool.filter(s => s.market === currentMarket).slice(0, 12);
                 renderAutocompleteItems(menu, defaultList, "");
                 return;
             }
 
-            // 搜尋包含代號、中文或英文名稱之標的
             const matches = pool.filter(s => 
                 s.symbol.toLowerCase().includes(q) || 
                 s.name.toLowerCase().includes(q) || 
                 (s.engName && s.engName.toLowerCase().includes(q))
             );
 
-            // 排序：優先完全比對、優先當前選擇之市場
             matches.sort((a, b) => {
                 const aExact = (a.symbol.toLowerCase() === q || a.name.toLowerCase() === q) ? 1 : 0;
                 const bExact = (b.symbol.toLowerCase() === q || b.name.toLowerCase() === q) ? 1 : 0;
@@ -920,7 +902,7 @@
                                         instMap[item.date] = { foreign: 0, trust: 0, dealer: 0, total: 0 };
                                     }
                                     const netShares = (item.buy || 0) - (item.sell || 0);
-                                    const netLots = Math.round(netShares / 1000); // 轉換為張數
+                                    const netLots = Math.round(netShares / 1000);
 
                                     const name = item.name || '';
                                     if (name.includes('Foreign') || name.includes('外資')) {
@@ -2207,50 +2189,56 @@
             const tableCount = document.getElementById('tradeTableCount');
 
             if (!trades || trades.length === 0) {
-                tableCount.innerText = `0 筆歷史交易紀錄`;
-                tableBody.innerHTML = `
-                    <tr>
-                        <td colspan="8" class="text-center py-6 text-slate-500">
-                            該股票於指定天數數據中未能觸發勝率 ≥75% 策略之進場訊號 (分析無果或無紀錄)。
-                        </td>
-                    </tr>
-                `;
+                if (tableCount) tableCount.innerText = `0 筆歷史交易紀錄`;
+                if (tableBody) {
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="8" class="text-center py-6 text-slate-500">
+                                該股票於指定天數數據中未能觸發策略之進場訊號 (分析無果或無紀錄)。
+                            </td>
+                        </tr>
+                    `;
+                }
                 return;
             }
 
-            tableCount.innerText = `共觸發 ${trades.length} 筆歷史量化交易紀錄`;
-            tableBody.innerHTML = '';
+            if (tableCount) tableCount.innerText = `共 ${trades.length} 筆歷史交易紀錄`;
 
-            const reversedTrades = [...trades].reverse();
-
-            reversedTrades.forEach((t) => {
-                const tr = document.createElement('tr');
-                tr.className = 'hover:bg-slate-800/40 transition-colors';
-
-                let returnBadgeClass = 'text-slate-300 bg-slate-800 border-slate-700';
-                if (t.isWin) {
-                    returnBadgeClass = 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30';
-                } else if (t.isLoss) {
-                    returnBadgeClass = 'text-rose-400 bg-rose-500/10 border-rose-500/30';
-                }
-
-                tr.innerHTML = `
-                    <td class="py-2.5 px-3 text-slate-500">${t.id}</td>
-                    <td class="py-2.5 px-3 text-slate-200">${t.entryDate}</td>
-                    <td class="py-2.5 px-3 font-semibold text-cyan-300">$${t.entryPrice.toFixed(2)}</td>
-                    <td class="py-2.5 px-3 text-slate-200">${t.exitDate || '持倉中'}</td>
-                    <td class="py-2.5 px-3 font-semibold text-slate-100">${t.exitPrice ? '$' + t.exitPrice.toFixed(2) : '--'}</td>
-                    <td class="py-2.5 px-3">
-                        <span class="px-2 py-0.5 rounded border text-[11px] font-bold ${returnBadgeClass}">
-                            ${t.returnPercent >= 0 ? '+' : ''}${t.returnPercent}%
-                        </span>
-                    </td>
-                    <td class="py-2.5 px-3 text-slate-400">${t.holdDays} 天</td>
-                    <td class="py-2.5 px-3 text-slate-300">${t.reason}</td>
-                `;
-                tableBody.appendChild(tr);
-            });
+            if (tableBody) {
+                tableBody.innerHTML = trades.map((t, idx) => {
+                    const retColor = t.returnPercent >= 0 ? 'text-emerald-400' : 'text-rose-400';
+                    const sign = t.returnPercent >= 0 ? '+' : '';
+                    return `
+                        <tr class="hover:bg-slate-800/50 transition-colors">
+                            <td class="py-2.5 px-3 text-slate-400">${idx + 1}</td>
+                            <td class="py-2.5 px-3 text-slate-200">${t.entryDate || '--'}</td>
+                            <td class="py-2.5 px-3 text-cyan-400 font-bold">$${t.entryPrice ? t.entryPrice.toFixed(2) : '--'}</td>
+                            <td class="py-2.5 px-3 text-slate-200">${t.exitDate || '持倉中'}</td>
+                            <td class="py-2.5 px-3 text-slate-100 font-bold">${t.exitPrice ? '$' + t.exitPrice.toFixed(2) : '--'}</td>
+                            <td class="py-2.5 px-3 font-bold ${retColor}">${sign}${t.returnPercent}%</td>
+                            <td class="py-2.5 px-3 text-slate-300">${t.holdDays} 天</td>
+                            <td class="py-2.5 px-3 text-slate-300 font-sans">${t.reason}</td>
+                        </tr>
+                    `;
+                }).join('');
+            }
         }
+
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        window.addEventListener('scroll', () => {
+            const btn = document.getElementById('backToTopBtn');
+            if (!btn) return;
+            if (window.scrollY > 300) {
+                btn.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-4');
+                btn.classList.add('opacity-100', 'pointer-events-auto', 'translate-y-0');
+            } else {
+                btn.classList.remove('opacity-100', 'pointer-events-auto', 'translate-y-0');
+                btn.classList.add('opacity-0', 'pointer-events-none', 'translate-y-4');
+            }
+        });
 
         window.addEventListener('DOMContentLoaded', () => {
             const stockInput = document.getElementById('stockInput');
@@ -2284,11 +2272,8 @@
             }
 
             if (stockInput) {
-                // 輸入時立即觸發並顯示匹配項目
                 stockInput.addEventListener('input', (e) => handleAutocompleteInput(e.target.value));
-                // 聚焦時立即跳出建議選單
                 stockInput.addEventListener('focus', (e) => handleAutocompleteInput(e.target.value));
-                // 點擊搜尋框時阻止關閉並彈出選單
                 stockInput.addEventListener('click', (e) => {
                     e.stopPropagation();
                     handleAutocompleteInput(stockInput.value);
