@@ -1072,6 +1072,12 @@
             for (let i = 0; i < n; i++) {
                 const c = candles[i];
                 
+                // 計算 5 日成交量均量 (Volume MA5) 與 量比 (Volume Ratio)
+                let volSlice = candles.slice(Math.max(0, i - 4), i + 1);
+                let volSum = volSlice.reduce((sum, item) => sum + (item.volume || 0), 0);
+                c.volMa5 = Math.round(volSum / volSlice.length);
+                c.volRatio = c.volMa5 > 0 ? parseFloat(((c.volume || 0) / c.volMa5).toFixed(2)) : 1.0;
+
                 if (i > 0) {
                     ema20 = c.close * k20 + ema20 * (1 - k20);
                     ema50 = c.close * k50 + ema50 * (1 - k50);
@@ -1148,158 +1154,158 @@
             return [
                 {
                     id: 'algo_rsi_oversold',
-                    name: 'RSI(14) 超賣 + 三大法人籌碼回補',
+                    name: 'RSI(14) 超賣 + 法人籌碼回補 + 低檔放量',
                     rulesText: [
                         `當 RSI(14) 跌至 38 以下極端超賣區後發動反彈`,
+                        `當日成交量突破 5 日成交量均線 (Volume > 5日MA)，呈低檔換手`,
                         `三大法人當日買賣超由負轉正 (三大法人合計 > 0 張)`,
                         `最高價與收盤價綜合判讀，當日 High 觸及/突破 EMA 20`,
-                        `成交價於當日最高最低價區間 (High-Low) 扣抵成交`,
                         `執行風控：獲利 > ${tpPct}% 停利，跌破 -${slPct}% 停損`
                     ],
-                    entryCondition: (c, prev) => c.rsi < 38 && c.rsi > prev.rsi && c.high >= c.ema20 && c.instTotal > 0,
+                    entryCondition: (c, prev) => c.rsi < 38 && c.rsi > prev.rsi && c.high >= c.ema20 && c.instTotal > 0 && c.volume >= c.volMa5,
                     getEntryPrice: (c) => (c.low <= c.ema20 && c.ema20 <= c.high) ? c.ema20 : parseFloat(((c.low + c.close) / 2).toFixed(2))
                 },
                 {
                     id: 'algo_bb_bounce',
-                    name: '布林下軌觸底 + 外資抄底卡位模型',
+                    name: '布林下軌觸底 + 外資抄底 + 量能止跌回升',
                     rulesText: [
                         `當日最低價 (Low) 觸及或刺穿布林通道下軌 (20, 2)`,
+                        `當日成交量止跌增溫 (Volume > 前日成交量 或 >= 5日均量)`,
                         `外資當日呈淨買超或三大法人買超合計轉正`,
                         `當日收實體紅 K 棒或最高價 (High) 向上推升`,
-                        `成交價於當日 Low~High 區間之布林下軌支撐位掛單`,
                         `達標 > ${tpPct}% 獲利離場，破 -${slPct}% 執行止損`
                     ],
-                    entryCondition: (c, prev) => (c.low <= c.bbLower || prev.low <= prev.bbLower) && c.high > c.open && (c.instForeign > 0 || c.instTotal > 0),
+                    entryCondition: (c, prev) => (c.low <= c.bbLower || prev.low <= prev.bbLower) && c.high > c.open && (c.instForeign > 0 || c.instTotal > 0) && (c.volume > prev.volume || c.volume >= c.volMa5),
                     getEntryPrice: (c) => Math.min(c.high, Math.max(c.low, c.bbLower))
                 },
                 {
                     id: 'algo_ema_golden_cross',
-                    name: 'EMA 20/50 金叉 + 法人順勢鎖碼策略',
+                    name: 'EMA 20/50 金叉 + 攻擊量湧現 + 法人鎖碼',
                     rulesText: [
                         `EMA 20 均線向上穿越 EMA 50 均線，當日 Low 獲得 EMA50 支撐`,
+                        `成交量出現攻擊量爆發 (量比 Volume Ratio >= 1.15 倍 5日均量)`,
                         `三大法人近 3 日籌碼買超累積呈現淨流入`,
                         `RSI(14) 位於 42 至 68 強勢動能區，High 破短期高點`,
-                        `進場價於當日 High-Low 範圍之 EMA 20 均線成交`,
                         `獲利觸及 > ${tpPct}% 停利，跌破 -${slPct}% 止損`
                     ],
-                    entryCondition: (c, prev) => prev.ema20 <= prev.ema50 && c.ema20 > c.ema50 && c.high >= c.ema20 && c.rsi >= 42 && c.instTotal > -200,
+                    entryCondition: (c, prev) => prev.ema20 <= prev.ema50 && c.ema20 > c.ema50 && c.high >= c.ema20 && c.rsi >= 42 && c.instTotal > -200 && c.volRatio >= 1.15,
                     getEntryPrice: (c) => Math.min(c.high, Math.max(c.low, c.ema20))
                 },
                 {
                     id: 'algo_stoch_kd_hook',
-                    name: 'KD 低檔金叉 + 投信作多共振模型',
+                    name: 'KD 低檔金叉 + 投信作多 + 帶量鉤頭',
                     rulesText: [
                         `Stochastic %K 於 25 以下超賣區上穿 %D 形成金叉`,
+                        `當日成交量突破前日成交量 (Volume > 前日成交量)，動能升溫`,
                         `當日最低價 Low 回測 EMA 50 主趨勢支撐位`,
                         `投信或三大法人當日為淨買超狀態`,
-                        `成交價於當日 High-Low 內之 EMA 50 支撐點`,
                         `觸及 > ${tpPct}% 停利點，跌破 -${slPct}% 止損`
                     ],
-                    entryCondition: (c, prev) => prev.stochK < 25 && prev.stochK <= prev.stochD && c.stochK > c.stochD && c.high >= c.ema50 && (c.instTrust > 0 || c.instTotal > 0),
+                    entryCondition: (c, prev) => prev.stochK < 25 && prev.stochK <= prev.stochD && c.stochK > c.stochD && c.high >= c.ema50 && (c.instTrust > 0 || c.instTotal > 0) && c.volume > prev.volume,
                     getEntryPrice: (c) => Math.min(c.high, Math.max(c.low, c.ema50))
                 },
                 {
                     id: 'algo_williams_r',
-                    name: '威廉 %R 極限反轉 + 外資吸籌策略',
+                    name: '威廉 %R 極限反轉 + 換手放量 + 外資吸籌',
                     rulesText: [
                         `Williams %R 低於 -80，當日 Low 探底後爆發下影線`,
+                        `當日成交量擴量大於 5 日均量 (Volume >= 5日MA)，多頭換手強勁`,
                         `外資與自營商籌碼出現回補買盤`,
                         `當日最高價 High 向上拉升，展現探底反彈力道`,
-                        `成交價位鎖定於當日 High-Low 低檔黃金分割區`,
                         `嚴格遵守風控：勝退 > ${tpPct}% / 敗退 -${slPct}%`
                     ],
-                    entryCondition: (c) => c.rsi < 36 && (c.high - c.low) > 0 && c.close > c.low && c.instForeign > -100,
+                    entryCondition: (c) => c.rsi < 36 && (c.high - c.low) > 0 && c.close > c.low && c.instForeign > -100 && c.volume >= c.volMa5,
                     getEntryPrice: (c) => parseFloat(((c.low * 2 + c.high) / 3).toFixed(2))
                 },
                 {
                     id: 'algo_ema_squeeze',
-                    name: '均線密集壓縮 + 法人爆量點火策略',
+                    name: '均線密集壓縮 + 爆量點火突破 + 法人卡位',
                     rulesText: [
                         `EMA 20 與 EMA 50 均線距離縮至 1.5% 以內極致交纏`,
-                        `三大法人同步湧入買超 (三大法人買超 > 500 張)`,
+                        `當日成交量爆發突擴巨量 (量比 Volume Ratio >= 1.25 倍 5日均量)`,
+                        `三大法人同步湧入買超 (三大法人買超 > 100 張)`,
                         `當日最高價 High 向上帶量強勢衝破均線糾結`,
-                        `買進價於當日 High-Low 區間之均線交纏位撮合`,
                         `目標報酬 > ${tpPct}% / 停損點 -${slPct}%`
                     ],
-                    entryCondition: (c) => Math.abs(c.ema20 - c.ema50) / c.close < 0.015 && c.high > Math.max(c.ema20, c.ema50) && c.instTotal > 100,
+                    entryCondition: (c) => Math.abs(c.ema20 - c.ema50) / c.close < 0.015 && c.high > Math.max(c.ema20, c.ema50) && c.instTotal > 100 && c.volRatio >= 1.25,
                     getEntryPrice: (c) => Math.min(c.high, Math.max(c.low, (c.ema20 + c.ema50) / 2))
                 },
                 {
                     id: 'algo_bullish_engulfing',
-                    name: '支撐位多頭吞噬 + 法人連買轉折策略',
+                    name: '支撐位多頭吞噬 + 帶量攻擊 + 法人連買',
                     rulesText: [
                         `當日 Low 破前低且 High 創前高，形成標準多頭吞噬 K 線`,
+                        `吞噬紅 K 伴隨成交量顯著放大 (Volume > 前日 且 >= 5日均量)`,
                         `三大法人由賣轉買，單日合計呈顯著買超`,
                         `當日高低振幅擴大且 RSI(14) 突破 40`,
-                        `成交價於當日 High-Low 之關鍵轉折點成交`,
                         `風控機制：獲利 > ${tpPct}% 結算，虧損 -${slPct}% 離場`
                     ],
-                    entryCondition: (c, prev) => prev.close < prev.open && c.close > c.open && c.high > prev.high && c.low <= prev.low && c.rsi > 40 && c.instTotal > 0,
+                    entryCondition: (c, prev) => prev.close < prev.open && c.close > c.open && c.high > prev.high && c.low <= prev.low && c.rsi > 40 && c.instTotal > 0 && c.volume > prev.volume && c.volume >= c.volMa5,
                     getEntryPrice: (c, prev) => Math.min(c.high, Math.max(c.low, prev.close))
                 },
                 {
                     id: 'algo_donchian_dip',
-                    name: '唐奇安通道抄底 + 籌碼安定過濾模型',
+                    name: '唐奇安通道抄底 + 量平放量 + 籌碼安定過濾',
                     rulesText: [
                         `股價當日 Low 探底測試近 20 日通道低點位獲得買盤`,
+                        `當日成交量溫和放量站上 5 日均量 (Volume >= 5日MA)`,
                         `三大法人賣壓竭盡，籌碼流出量顯著收窄`,
                         `RSI 指標展現底背離，當日 High 開始推升`,
-                        `成交價位鎖定於當日 High-Low 區間內之通道低點`,
                         `到達 > ${tpPct}% 停利點或 -${slPct}% 停損點自動出場`
                     ],
-                    entryCondition: (c, prev) => c.low <= c.bbLower && c.rsi > prev.rsi && c.high > c.low && c.instTotal > -300,
+                    entryCondition: (c, prev) => c.low <= c.bbLower && c.rsi > prev.rsi && c.high > c.low && c.instTotal > -300 && c.volume >= c.volMa5,
                     getEntryPrice: (c) => Math.min(c.high, Math.max(c.low, c.bbLower))
                 },
                 {
                     id: 'algo_atr_breakout',
-                    name: '波動度收縮突破 + 法人同向大買模型',
+                    name: '波動度突破 + 攻擊強勢量 + 法人同向大買',
                     rulesText: [
                         `當日最高價 High 強勢突破近 10 日新高`,
+                        `成交量出現突破攻擊量 (量比 Volume Ratio >= 1.2 倍 5日均量)`,
                         `三大法人大舉加碼 (外資/投信同步買超)`,
                         `High/Close 雙雙站上布林中軌，RSI 指標大於 50`,
-                        `買進價位成交於當日 High-Low 之布林中軌穿透點`,
                         `執行 > ${tpPct}% 獲利平倉與 -${slPct}% 止損`
                     ],
-                    entryCondition: (c) => c.high > c.bbMiddle && c.rsi > 50 && c.close > c.ema20 && c.instTotal > 200,
+                    entryCondition: (c) => c.high > c.bbMiddle && c.rsi > 50 && c.close > c.ema20 && c.instTotal > 200 && c.volRatio >= 1.2,
                     getEntryPrice: (c) => Math.min(c.high, Math.max(c.low, c.bbMiddle))
                 },
                 {
                     id: 'algo_cci_oversold',
-                    name: '順勢 CCI 超賣 + 外資洗盤後反轉策略',
+                    name: '順勢 CCI 超賣 + 洗盤量增反轉 + 外資低回補',
                     rulesText: [
                         `當日 Low 洗盤跌破前低後，High/Close 強力拉回`,
+                        `當日成交量高於前一日 (Volume > 前日成交量)，顯現低檔接盤力道`,
                         `外資低檔回補或投信護盤買超`,
                         `RSI(14) 突破 35 水準位，影線顯示買盤介入`,
-                        `進場價於當日 High-Low 區間之低檔反彈區成交`,
                         `獲利 > ${tpPct}% / 止損 -${slPct}%`
                     ],
-                    entryCondition: (c, prev) => prev.rsi < 35 && c.rsi >= 35 && c.high > c.low && (c.instForeign > 0 || c.instTrust > 0),
+                    entryCondition: (c, prev) => prev.rsi < 35 && c.rsi >= 35 && c.high > c.low && (c.instForeign > 0 || c.instTrust > 0) && c.volume > prev.volume,
                     getEntryPrice: (c) => parseFloat(((c.low + c.open) / 2).toFixed(2))
                 },
                 {
                     id: 'algo_roc_momentum',
-                    name: '變動率 ROC 轉正 + 三大法人連買模型',
+                    name: '變動率 ROC 轉正 + 量能配合 + 三大法人連買',
                     rulesText: [
                         `近 12 日價格變動率轉正，當日 Low 守穩 EMA 50`,
+                        `當日成交量站上 5 日成交量均線 (Volume >= 5日MA)`,
                         `三大法人呈現連續買超佈局`,
                         `最高價 High 站上 EMA 20 與 EMA 50 兩大均線`,
-                        `成交價採當日 High-Low 範圍之 EMA 20 均線位`,
                         `勝條件 > ${tpPct}% / 敗條件 -${slPct}%`
                     ],
-                    entryCondition: (c) => c.rsi > 50 && c.high > c.ema20 && c.low >= c.ema50 && c.instTotal > 0,
+                    entryCondition: (c) => c.rsi > 50 && c.high > c.ema20 && c.low >= c.ema50 && c.instTotal > 0 && c.volume >= c.volMa5,
                     getEntryPrice: (c) => Math.min(c.high, Math.max(c.low, c.ema20))
                 },
                 {
                     id: 'algo_triple_screen',
-                    name: '三重濾網共振 + 法人多頭排列模型',
+                    name: '三重濾網共振 + 溫和放量 + 法人多頭排列',
                     rulesText: [
                         `EMA 20 與 EMA 50 呈現多頭排列`,
+                        `當日成交量大於等於 5 日成交量均線 (Volume >= 5日MA)`,
                         `RSI(14) 回檔至 40~55 區間蓄勢`,
                         `三大法人買超連 2 日增長`,
-                        `成交價位鎖定於當日 High-Low 範圍之 EMA 20 均線`,
                         `勝條件 > ${tpPct}% / 敗條件 -${slPct}%`
                     ],
-                    entryCondition: (c) => c.ema20 > c.ema50 && c.rsi >= 40 && c.rsi <= 55 && c.instTotal > 0,
+                    entryCondition: (c) => c.ema20 > c.ema50 && c.rsi >= 40 && c.rsi <= 55 && c.instTotal > 0 && c.volume >= c.volMa5,
                     getEntryPrice: (c) => Math.min(c.high, Math.max(c.low, c.ema20))
                 }
             ];
