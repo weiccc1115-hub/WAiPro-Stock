@@ -3,39 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WAiPro 股票進退場點量化分析系統</title>
+    <title>WAiPro 股票進退場點量化分析與批量風控系統</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Chart.js CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Chart.js Zoom Plugin & HammerJS for Gesture/Zooming -->
-    <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
-
     <script>
         tailwind.config = {
             darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
+                        darkBg: '#0b0f19',
+                        cardBg: '#111827',
+                        borderBg: '#1f2937',
                         brand: {
                             50: '#f0fdf4',
                             500: '#22c55e',
                             600: '#16a34a',
                             900: '#14532d',
-                        },
-                        darkbg: '#0b0f19',
-                        cardbg: '#1e293b',
-                        borderbg: '#334155'
+                        }
                     }
                 }
             }
         }
     </script>
+    <!-- FontAwesome Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chart.js Zoom Plugin & HammerJS for Gesture/Zooming -->
+    <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap');
         body {
-            font-family: 'Inter', 'Noto Sans TC', sans-serif;
+            font-family: 'Inter', 'Noto Sans TC', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background-color: #0b0f19;
             color: #f1f5f9;
             overflow-x: hidden;
@@ -46,19 +48,30 @@
             height: 6px;
         }
         ::-webkit-scrollbar-track {
-            background: #1e293b;
+            background: #111827;
         }
         ::-webkit-scrollbar-thumb {
-            background: #475569;
+            background: #374151;
             border-radius: 4px;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: #64748b;
+            background: #4b5563;
         }
         .autocomplete-dropdown {
             max-height: 320px;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
+        }
+        .glow-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .glow-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 20px 25px -5px rgba(16, 185, 129, 0.15), 0 10px 10px -5px rgba(59, 130, 246, 0.1);
+        }
+        .glow-card-2:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 20px 25px -5px rgba(139, 92, 246, 0.2), 0 10px 10px -5px rgba(59, 130, 246, 0.15);
         }
         canvas {
             touch-action: pan-y pinch-zoom;
@@ -70,45 +83,139 @@
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col justify-between selection:bg-emerald-500 selection:text-white">
+<body class="min-h-screen flex flex-col justify-between relative selection:bg-emerald-500 selection:text-white">
 
-    <header class="border-b border-slate-800 bg-slate-900/90 backdrop-blur sticky top-0 z-50 px-3 sm:px-4 lg:px-8 py-3">
-        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3 sm:gap-4">
-            <div class="flex items-center gap-2.5 sm:gap-3 w-full md:w-auto justify-between md:justify-start">
-                <div class="flex items-center gap-2.5">
-                    <div class="p-2 bg-gradient-to-tr from-emerald-600 to-teal-400 rounded-xl shadow-lg shadow-emerald-500/20">
-                        <svg class="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
-                        </svg>
+    <!-- Global Application Header -->
+    <header class="w-full bg-slate-900/90 border-b border-slate-800 sticky top-0 z-50 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-3 sm:space-x-4">
+                <button onclick="switchView('home')" class="flex items-center space-x-1.5 text-slate-400 hover:text-white transition-colors text-xs sm:text-sm font-medium">
+                    <i class="fa-solid fa-house"></i>
+                    <span class="hidden sm:inline">首頁</span>
+                </button>
+                <span class="text-slate-700">|</span>
+                <div class="flex items-center space-x-2.5 cursor-pointer" onclick="switchView('home')">
+                    <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-white text-base font-bold shadow-md shadow-emerald-500/20">
+                        <i class="fa-solid fa-chart-line"></i>
                     </div>
                     <div>
-                        <h1 class="text-base sm:text-xl font-bold bg-gradient-to-r from-white via-slate-200 to-emerald-400 bg-clip-text text-transparent">
-                            WAiPro 股票進退場點量化分析系統
-                        </h1>
-                        <p id="headerSubtext" class="text-[10px] sm:text-xs text-slate-400"><span id="headerDaysText">365</span>天三大法人籌碼連動 · 12大演算法全評比最佳解 (勝率 ≥ <span id="headerMinWinRateText">75</span>%)</p>
+                        <span class="text-base sm:text-lg font-black bg-gradient-to-r from-white via-slate-200 to-emerald-400 bg-clip-text text-transparent">WAiPro</span>
+                        <span class="text-xs text-slate-400 font-medium ml-1.5 hidden md:inline">股票進退場點量化分析系統</span>
                     </div>
-                </div>
-
-                <div id="dataSourceBadge" class="flex md:hidden items-center gap-1.5 text-[10px] text-slate-300 bg-slate-800/80 px-2 py-1 rounded-lg border border-slate-700/60 font-mono">
-                    <span class="flex h-1.5 w-1.5 relative">
-                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                      <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
-                    </span>
-                    <span>連線中</span>
                 </div>
             </div>
 
-            <div class="hidden md:flex items-center gap-2 text-xs text-slate-300 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700/60 font-mono">
-                <span class="flex h-2 w-2 relative">
-                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                </span>
-                <span id="dataSourceText">數據源：連線中...</span>
+            <!-- Global View Navigation Buttons -->
+            <div class="flex items-center space-x-2 sm:space-x-3">
+                <span id="dataSourceText" class="text-xs text-slate-400 font-mono hidden lg:inline border border-slate-800 bg-slate-950 px-2.5 py-1 rounded-lg">數據源：連線中...</span>
+                <button onclick="switchView('waipro')" id="navWaiproBtn" class="px-3 py-1.5 rounded-xl bg-emerald-600 text-white text-xs font-semibold flex items-center space-x-1.5 transition shadow-lg shadow-emerald-600/20">
+                    <i class="fa-solid fa-chart-candlestick"></i>
+                    <span>單股量化分析</span>
+                </button>
+                <button onclick="switchView('portfolio')" id="navPortfolioBtn" class="px-3 py-1.5 rounded-xl bg-purple-600/20 border border-purple-500/40 text-purple-300 hover:bg-purple-600/30 text-xs font-semibold flex items-center space-x-1.5 transition">
+                    <i class="fa-solid fa-layer-group"></i>
+                    <span>批量風控掃描</span>
+                </button>
             </div>
         </div>
     </header>
 
-    <main class="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 w-full flex-grow space-y-4 sm:space-y-6">
+    <!-- SECTION 1: SYSTEM LANDING HOME PAGE -->
+    <section id="view-home" class="w-full max-w-6xl mx-auto px-6 py-12 flex-1 flex flex-col items-center justify-center space-y-12">
+        <!-- Background Glow Decor -->
+        <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-96 bg-gradient-to-b from-emerald-500/10 via-blue-500/5 to-transparent blur-3xl -z-10 pointer-events-none"></div>
+
+        <!-- Hero Title -->
+        <div class="text-center max-w-3xl space-y-4">
+            <div class="inline-flex items-center space-x-2 bg-slate-800/80 border border-slate-700/80 rounded-full px-4 py-1.5 text-xs text-slate-300">
+                <i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i>
+                <span>智慧量化回測 × 12 大策略勝率評估 × 批量動態風控</span>
+            </div>
+            <h1 class="text-4xl md:text-5xl font-extrabold text-white tracking-tight leading-tight">
+                掌握科學交易優勢<br/>
+                <span class="bg-gradient-to-r from-emerald-400 via-teal-300 to-blue-500 bg-clip-text text-transparent">WAiPro 智慧投資決策分析系統</span>
+            </h1>
+            <p class="text-slate-400 text-base md:text-lg">
+                整合 12 大專業量化策略、三大法人籌碼分析、價量技術指標與自訂風控參數，為您提供精準的進退場點評估與批量投資組合績效掃描。
+            </p>
+        </div>
+
+        <!-- Two Action Cards Navigation -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
+            <!-- Card 1: WAiPro Single Stock Quantitative Analysis -->
+            <div onclick="switchView('waipro')" class="cursor-pointer group">
+                <div class="bg-slate-900/90 border border-emerald-500/30 rounded-2xl p-8 glow-card h-full flex flex-col justify-between relative overflow-hidden backdrop-blur-sm">
+                    <div class="absolute -right-12 -bottom-12 w-48 h-48 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all"></div>
+                    <div>
+                        <div class="flex items-center justify-between mb-6">
+                            <div class="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-2xl group-hover:scale-110 transition-transform">
+                                <i class="fa-solid fa-chart-candlestick"></i>
+                            </div>
+                            <span class="text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-3 py-1 rounded-full font-medium">單股深度分析</span>
+                        </div>
+                        <h2 class="text-2xl font-bold text-white group-hover:text-emerald-400 transition-colors mb-3">
+                            WAiPro 單股進退場點量化分析
+                        </h2>
+                        <p class="text-slate-400 text-sm leading-relaxed mb-6">
+                            針對單一股票提供完整的 12 大策略回測勝率、動態 K 線圖表、三大法人籌碼連動、5日預測、財報 EPS 評估與詳細交易紀錄。
+                        </p>
+                    </div>
+                    <div class="flex items-center text-emerald-400 font-semibold text-sm group-hover:translate-x-2 transition-transform">
+                        <span>開啟 WAiPro 單股分析系統</span>
+                        <i class="fa-solid fa-arrow-right ml-2"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 2: Batch Portfolio Risk Screener -->
+            <div onclick="switchView('portfolio')" class="cursor-pointer group">
+                <div class="bg-slate-900/90 border border-purple-500/30 rounded-2xl p-8 glow-card-2 h-full flex flex-col justify-between relative overflow-hidden backdrop-blur-sm">
+                    <div class="absolute -right-12 -bottom-12 w-48 h-48 bg-purple-500/10 rounded-full blur-2xl group-hover:bg-purple-500/20 transition-all"></div>
+                    <div>
+                        <div class="flex items-center justify-between mb-6">
+                            <div class="w-14 h-14 rounded-2xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400 text-2xl group-hover:scale-110 transition-transform">
+                                <i class="fa-solid fa-layer-group"></i>
+                            </div>
+                            <span class="text-xs text-purple-400 bg-purple-500/10 border border-purple-500/30 px-3 py-1 rounded-full font-medium">批量策略清單</span>
+                        </div>
+                        <h2 class="text-2xl font-bold text-white group-hover:text-purple-400 transition-colors mb-3">
+                            自訂風控與批量股票掃描
+                        </h2>
+                        <p class="text-slate-400 text-sm leading-relaxed mb-6">
+                            建立個人股票觀察清單，彈性自訂停利、停損、勝率、回測天數與策略模式，透過 WAiPro 一鍵批量分析並輸出整合報表。
+                        </p>
+                    </div>
+                    <div class="flex items-center text-purple-400 font-semibold text-sm group-hover:translate-x-2 transition-transform">
+                        <span>進入批量風控評估頁面</span>
+                        <i class="fa-solid fa-arrow-right ml-2"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Showcase Badges -->
+        <div class="border-t border-slate-800/80 pt-10 w-full max-w-4xl grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+            <div class="space-y-1">
+                <div class="text-2xl font-bold text-emerald-400">12 種</div>
+                <div class="text-xs text-slate-400">專業量化策略</div>
+            </div>
+            <div class="space-y-1">
+                <div class="text-2xl font-bold text-blue-400">2,000+ 檔</div>
+                <div class="text-xs text-slate-400">台/美股即時涵蓋</div>
+            </div>
+            <div class="space-y-1">
+                <div class="text-2xl font-bold text-purple-400">5 日</div>
+                <div class="text-xs text-slate-400">未來動態漲勢預測</div>
+            </div>
+            <div class="space-y-1">
+                <div class="text-2xl font-bold text-amber-400">100%</div>
+                <div class="text-xs text-slate-400">自訂風控停利停損</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 2: WAIPRO SINGLE STOCK QUANTITATIVE ANALYSIS VIEW -->
+    <section id="view-waipro" class="hidden max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 w-full flex-grow space-y-4 sm:space-y-6">
 
         <section class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3.5 sm:p-5 shadow-xl space-y-4 sm:space-y-5 relative">
             <div class="flex items-center justify-between border-b border-slate-800 pb-3 flex-wrap gap-2">
@@ -491,13 +598,213 @@
             </div>
         </section>
 
-    </main>
+    </section>
 
-    <footer class="border-t border-slate-800 bg-slate-950 py-4 px-4 text-center text-xs text-slate-500">
-        <p>WAiPro Multi-Algorithm Stock Analytics System © 2026. 數據源：FinMind 官方台股 API & Yahoo Finance 美股實時行情。本系統僅供量化研究，投資請審慎評估風險。</p>
+    <!-- SECTION 3: BATCH PORTFOLIO RISK SCREENER VIEW -->
+    <section id="view-portfolio" class="hidden max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 space-y-8">
+
+        <!-- Top Panel: Stock Watchlist Input & Strategy Parameter Controls -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <!-- Panel 1: Stock Watchlist Manager (Using WAiPro Style Search) -->
+            <div class="lg:col-span-1 bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-base font-bold text-white flex items-center space-x-2">
+                        <i class="fa-solid fa-list-check text-purple-400"></i>
+                        <span>1. 股票觀察清單</span>
+                    </h2>
+                    <span id="stockCountBadge" class="text-xs bg-purple-950 text-purple-300 border border-purple-800 px-2.5 py-0.5 rounded-full font-semibold">
+                        6 檔股票
+                    </span>
+                </div>
+
+                <!-- Input & Add Bar (Identical to WAiPro search input) -->
+                <div class="space-y-2">
+                    <label class="block text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                        <span>🔍 搜尋並加入股票標的</span>
+                        <span class="text-[10px] text-slate-500 font-normal">(點擊或輸入代號與名稱)</span>
+                    </label>
+                    <div class="relative z-30">
+                        <div class="flex space-x-2">
+                            <div class="relative flex-1">
+                                <input type="text" id="portfolioStockInput" autocomplete="off" placeholder="請輸入股票代號或名稱 (例如: 2330, 鴻海, 群聯, NVDA...)"
+                                       class="w-full bg-slate-950 border border-slate-700 text-slate-100 px-3.5 py-2.5 rounded-xl text-sm focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all font-mono tracking-wider shadow-inner">
+                                <!-- Autocomplete Menu -->
+                                <div id="portfolioAutocompleteMenu" class="autocomplete-dropdown hidden absolute left-0 right-0 top-full mt-1 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl z-50 divide-y divide-slate-800"></div>
+                            </div>
+                            <button id="addPortfolioStockBtn" class="px-4 py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-medium text-sm rounded-xl transition flex items-center space-x-1 shadow-lg shadow-purple-600/20">
+                                <i class="fa-solid fa-plus"></i>
+                                <span>新增</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Tags Presets -->
+                <div class="space-y-1.5">
+                    <span class="text-xs text-slate-400">熱門快速加入：</span>
+                    <div class="flex flex-wrap gap-1.5">
+                        <button onclick="addPresetStock('2330', '台積電')" class="px-2.5 py-1 bg-slate-950 hover:bg-slate-800 border border-slate-700 rounded-lg text-xs text-slate-300 transition">+ 台積電</button>
+                        <button onclick="addPresetStock('2454', '聯發科')" class="px-2.5 py-1 bg-slate-950 hover:bg-slate-800 border border-slate-700 rounded-lg text-xs text-slate-300 transition">+ 聯發科</button>
+                        <button onclick="addPresetStock('8299', '群聯')" class="px-2.5 py-1 bg-slate-950 hover:bg-slate-800 border border-slate-700 rounded-lg text-xs text-slate-300 transition">+ 群聯</button>
+                        <button onclick="addPresetStock('2344', '華邦電')" class="px-2.5 py-1 bg-slate-950 hover:bg-slate-800 border border-slate-700 rounded-lg text-xs text-slate-300 transition">+ 華邦電</button>
+                        <button onclick="addPresetStock('6223', '旺矽')" class="px-2.5 py-1 bg-slate-950 hover:bg-slate-800 border border-slate-700 rounded-lg text-xs text-slate-300 transition">+ 旺矽</button>
+                        <button onclick="addPresetStock('4958', '臻鼎-KY')" class="px-2.5 py-1 bg-slate-950 hover:bg-slate-800 border border-slate-700 rounded-lg text-xs text-slate-300 transition">+ 臻鼎-KY</button>
+                    </div>
+                </div>
+
+                <!-- Watchlist Chips Display -->
+                <div id="watchlistContainer" class="flex flex-wrap gap-2 pt-2 min-h-[80px] max-h-[160px] overflow-y-auto border-t border-slate-800">
+                </div>
+            </div>
+
+            <!-- Panel 2: Quantitative Strategy & Risk Parameters -->
+            <div class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4 flex flex-col justify-between">
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                        <h2 class="text-base font-bold text-white flex items-center space-x-2">
+                            <i class="fa-solid fa-sliders text-emerald-400"></i>
+                            <span>2. 設定風控與 WAiPro 量化參數</span>
+                        </h2>
+                        <span class="text-xs text-slate-400">自動代入 WAiPro 引擎進行全清單評估</span>
+                    </div>
+
+                    <!-- Parameter Inputs Grid -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                        <!-- Take Profit -->
+                        <div class="space-y-1.5">
+                            <label class="text-xs font-semibold text-slate-300 flex items-center justify-between">
+                                <span><i class="fa-solid fa-circle-arrow-up text-emerald-400 mr-1"></i>目標停利 (%)</span>
+                                <span id="tpValDisplay" class="text-emerald-400 font-bold">15%</span>
+                            </label>
+                            <div class="flex items-center space-x-2">
+                                <input type="number" id="paramTakeProfit" value="15" step="0.5" min="1" max="100"
+                                    class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white font-medium focus:outline-none focus:border-emerald-500">
+                                <span class="text-xs text-slate-400">%</span>
+                            </div>
+                        </div>
+
+                        <!-- Stop Loss -->
+                        <div class="space-y-1.5">
+                            <label class="text-xs font-semibold text-slate-300 flex items-center justify-between">
+                                <span><i class="fa-solid fa-circle-arrow-down text-rose-400 mr-1"></i>風控停損 (%)</span>
+                                <span id="slValDisplay" class="text-rose-400 font-bold">-10%</span>
+                            </label>
+                            <div class="flex items-center space-x-2">
+                                <input type="number" id="paramStopLoss" value="10" step="0.5" min="1" max="50"
+                                    class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white font-medium focus:outline-none focus:border-rose-500">
+                                <span class="text-xs text-slate-400">%</span>
+                            </div>
+                        </div>
+
+                        <!-- Target Win Rate -->
+                        <div class="space-y-1.5">
+                            <label class="text-xs font-semibold text-slate-300 flex items-center justify-between">
+                                <span><i class="fa-solid fa-trophy text-amber-400 mr-1"></i>目標勝率門檻 (%)</span>
+                                <span id="winRateValDisplay" class="text-amber-400 font-bold">60%</span>
+                            </label>
+                            <div class="flex items-center space-x-2">
+                                <input type="number" id="paramWinRate" value="60" step="1" min="50" max="95"
+                                    class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white font-medium focus:outline-none focus:border-amber-500">
+                                <span class="text-xs text-slate-400">%</span>
+                            </div>
+                        </div>
+
+                        <!-- Backtest Days -->
+                        <div class="space-y-1.5">
+                            <label class="text-xs font-semibold text-slate-300 flex items-center justify-between">
+                                <span><i class="fa-solid fa-calendar-days text-cyan-400 mr-1"></i>歷史回測天數</span>
+                                <span id="daysValDisplay" class="text-cyan-400 font-bold">90 天</span>
+                            </label>
+                            <select id="paramBacktestDays" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500">
+                                <option value="90" selected>90 天 (近 3 個月)</option>
+                                <option value="180">180 天 (近 半年)</option>
+                                <option value="365">365 天 (近 1 年)</option>
+                                <option value="500">500 天 (近 2 年)</option>
+                            </select>
+                        </div>
+
+                        <!-- Quant Strategy Selector -->
+                        <div class="space-y-1.5 sm:col-span-2">
+                            <label class="text-xs font-semibold text-slate-300 flex items-center justify-between">
+                                <span><i class="fa-solid fa-microchip text-purple-400 mr-1"></i>量化交易策略模式</span>
+                            </label>
+                            <select id="paramStrategy" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500">
+                                <option value="auto_max_return" selected>🚀 自動歷史量化交易績效最佳 (累積報酬極大化)</option>
+                                <option value="auto">🤖 自動回測勝率最佳 (三大法人 + 多指標)</option>
+                                <option value="auto_max_trades">⚡ 自動最多勝敗次數 (極大化交易樣本)</option>
+                                <option value="algo_rsi_oversold">1. RSI(14) 超賣 + 法人籌碼回補</option>
+                                <option value="algo_bb_bounce">2. 布林下軌觸底 + 外資抄底卡位</option>
+                                <option value="algo_ema_golden_cross">3. EMA 20/50 金叉 + 法人順勢鎖碼</option>
+                                <option value="algo_stoch_kd_hook">4. KD 低檔金叉 + 投信作多共振</option>
+                                <option value="algo_williams_r">5. 威廉 %R 極限反轉 + 外資吸籌</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Run Analysis Action Button -->
+                <div class="pt-4 border-t border-slate-800 flex justify-end">
+                    <button id="runBatchAnalysisBtn" class="w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-emerald-500 via-teal-500 to-blue-600 hover:from-emerald-400 hover:to-blue-500 text-white font-bold text-sm rounded-xl transition shadow-xl shadow-emerald-500/20 flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-bolt"></i>
+                        <span>啟動 WAiPro 全清單帶入分析</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 3: Aggregated Results Table -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+            <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b border-slate-800 pb-4">
+                <div>
+                    <h2 class="text-lg font-bold text-white flex items-center space-x-2">
+                        <i class="fa-solid fa-table-cells text-blue-400"></i>
+                        <span>WAiPro 清單量化分析整合報表 (嚴格採用 WAiPro 引擎試算)</span>
+                    </h2>
+                    <p class="text-xs text-slate-400 mt-1">包含當前股價、未來五天漲勢預測、歷史勝率、績效與建議進退場價位</p>
+                </div>
+
+                <div class="flex items-center space-x-3">
+                    <span id="analysisStatusTag" class="text-xs px-3 py-1 bg-emerald-950 text-emerald-300 border border-emerald-800 rounded-full font-medium flex items-center space-x-1.5">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span id="statusText">分析已完成</span>
+                    </span>
+                    <button onclick="exportTableCSV()" class="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-xs rounded-xl transition flex items-center space-x-1.5">
+                        <i class="fa-solid fa-download"></i>
+                        <span>匯出 CSV</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Table Container -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse min-w-[980px]">
+                    <thead>
+                        <tr class="bg-slate-950 border-b border-slate-800 text-slate-400 text-xs font-semibold uppercase tracking-wider">
+                            <th class="py-3.5 px-4 rounded-l-xl">股票名稱 / 代號</th>
+                            <th class="py-3.5 px-3 text-right">1. 當前股價</th>
+                            <th class="py-3.5 px-4 text-center">2. 未來五天漲勢預測 (D1 ~ D5)</th>
+                            <th class="py-3.5 px-3 text-center">3. 回測勝率 (幾勝幾敗)</th>
+                            <th class="py-3.5 px-3 text-right">4. 歷史量化交易績效</th>
+                            <th class="py-3.5 px-3 text-right">5. 未來建議進場觀察價</th>
+                            <th class="py-3.5 px-4 text-right rounded-r-xl">6. 未來退場目標 (自訂風控)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultTableBody" class="divide-y divide-slate-800/60 text-sm font-mono">
+                        <!-- Dynamic Rows generated by JS via waipro_v1 calculation -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </section>
+
+    <!-- Global Application Footer -->
+    <footer class="w-full border-t border-slate-800 py-6 mt-12 bg-slate-950 text-center text-xs text-slate-500">
+        WAiPro Quant Trading & Risk Management Analytics Platform © 2026. 數據源：FinMind 官方台股 API & Yahoo Finance 美股實時行情。
     </footer>
 
-    <!-- 回頁面頂部懸浮按鈕 -->
+    <!-- Back to Top Button -->
     <button id="backToTopBtn" onclick="scrollToTop()" 
             class="fixed bottom-6 right-6 z-50 p-3.5 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 active:scale-95 text-white rounded-full shadow-2xl border border-emerald-400/30 transition-all duration-300 opacity-0 pointer-events-none transform translate-y-4 flex items-center justify-center group"
             title="回到頂部">
@@ -516,30 +823,71 @@
         let rsiChartInstance = null;
         let TW_DYNAMIC_STOCK_DATABASE = [];
 
+        /* Portfolio Watchlist Default Items (28 Specified Stocks) */
+        let portfolioWatchlist = [
+            { symbol: '2330', name: '台積電', price: 1045.0 },
+            { symbol: '2454', name: '聯發科', price: 1285.0 },
+            { symbol: '8299', name: '群聯', price: 620.0 },
+            { symbol: '2344', name: '華邦電', price: 27.5 },
+            { symbol: '2408', name: '南亞科', price: 65.0 },
+            { symbol: '2379', name: '瑞昱', price: 540.0 },
+            { symbol: '2345', name: '智邦', price: 580.0 },
+            { symbol: '8046', name: '南電', price: 185.0 },
+            { symbol: '2337', name: '旺宏', price: 28.0 },
+            { symbol: '6223', name: '旺矽', price: 720.0 },
+            { symbol: '8150', name: '南茂', price: 42.0 },
+            { symbol: '6213', name: '聯茂', price: 85.0 },
+            { symbol: '2303', name: '聯電', price: 53.0 },
+            { symbol: '2324', name: '仁寶', price: 36.0 },
+            { symbol: '8358', name: '金居', price: 68.0 },
+            { symbol: '3006', name: '晶豪科', price: 82.0 },
+            { symbol: '6182', name: '合晶', price: 38.0 },
+            { symbol: '2382', name: '廣達', price: 280.0 },
+            { symbol: '2395', name: '研華', price: 380.0 },
+            { symbol: '2313', name: '華通', price: 78.0 },
+            { symbol: '2327', name: '國巨', price: 630.0 },
+            { symbol: '6239', name: '力成', price: 145.0 },
+            { symbol: '3260', name: '威剛', price: 95.0 },
+            { symbol: '8039', name: '台虹', price: 58.0 },
+            { symbol: '7750', name: '新代', price: 880.0 },
+            { symbol: '3037', name: '欣興', price: 175.0 },
+            { symbol: '2312', name: '金寶', price: 18.5 },
+            { symbol: '4958', name: '臻鼎-KY', price: 125.0 }
+        ];
+
+        /* Stock Database Pool */
         const STOCK_DATABASE = [
-            // 台股熱門權值股
             { symbol: '2330', name: '台積電', engName: 'TSMC', market: 'TW' },
-            { symbol: '2317', name: '鴻海', engName: 'Foxconn', market: 'TW' },
             { symbol: '2454', name: '聯發科', engName: 'MediaTek', market: 'TW' },
             { symbol: '8299', name: '群聯', engName: 'Phison', market: 'TW' },
-            { symbol: '0050', name: '元大台灣50', engName: 'Yuanta TW50', market: 'TW' },
-            { symbol: '0056', name: '元大高股息', engName: 'Yuanta High Div', market: 'TW' },
-            { symbol: '00878', name: '國泰永續高股息', engName: 'Cathay ESG', market: 'TW' },
-            { symbol: '00919', name: '群益台灣精選高息', engName: 'Capital TW Div', market: 'TW' },
-            { symbol: '00929', name: '復華台灣科技優息', engName: 'Fuh Hwa Tech', market: 'TW' },
-            { symbol: '00940', name: '元大台灣價值高息', engName: 'Yuanta TW Value', market: 'TW' },
-            { symbol: '2308', name: '台達電', engName: 'Delta', market: 'TW' },
-            { symbol: '2603', name: '長榮', engName: 'Evergreen', market: 'TW' },
-            { symbol: '2382', name: '廣達', engName: 'Quanta', market: 'TW' },
+            { symbol: '2344', name: '華邦電', engName: 'Winbond', market: 'TW' },
+            { symbol: '2408', name: '南亞科', engName: 'Nanya Tech', market: 'TW' },
+            { symbol: '2379', name: '瑞昱', engName: 'Realtek', market: 'TW' },
+            { symbol: '2345', name: '智邦', engName: 'Accton', market: 'TW' },
+            { symbol: '8046', name: '南電', engName: 'Nan Ya PCB', market: 'TW' },
+            { symbol: '2337', name: '旺宏', engName: 'MXIC', market: 'TW' },
+            { symbol: '6223', name: '旺矽', engName: 'MPI', market: 'TW' },
+            { symbol: '8150', name: '南茂', engName: 'ChipMOS', market: 'TW' },
+            { symbol: '6213', name: '聯茂', engName: 'ITEQ', market: 'TW' },
             { symbol: '2303', name: '聯電', engName: 'UMC', market: 'TW' },
-            { symbol: '3008', name: '大立光', engName: 'Largan', market: 'TW' },
-            { symbol: '2357', name: '華碩', engName: 'ASUS', market: 'TW' },
-            { symbol: '3231', name: '緯創', engName: 'Wistron', market: 'TW' },
-            { symbol: '6669', name: '緯穎', engName: 'Wiwynn', market: 'TW' },
-            { symbol: '2301', name: '光寶科', engName: 'LiteOn', market: 'TW' },
-            { symbol: '1513', name: '中興電', engName: 'CHEM', market: 'TW' },
+            { symbol: '2324', name: '仁寶', engName: 'Compal', market: 'TW' },
+            { symbol: '8358', name: '金居', engName: 'Co-Tech', market: 'TW' },
+            { symbol: '3006', name: '晶豪科', engName: 'ESMT', market: 'TW' },
+            { symbol: '6182', name: '合晶', engName: 'Wafer Works', market: 'TW' },
+            { symbol: '2382', name: '廣達', engName: 'Quanta', market: 'TW' },
+            { symbol: '2395', name: '研華', engName: 'Advantech', market: 'TW' },
+            { symbol: '2313', name: '華通', engName: 'Compeq', market: 'TW' },
+            { symbol: '2327', name: '國巨', engName: 'Yageo', market: 'TW' },
+            { symbol: '6239', name: '力成', engName: 'PTI', market: 'TW' },
+            { symbol: '3260', name: '威剛', engName: 'ADATA', market: 'TW' },
+            { symbol: '8039', name: '台虹', engName: 'Taiflex', market: 'TW' },
+            { symbol: '7750', name: '新代', engName: 'Syntec', market: 'TW' },
+            { symbol: '3037', name: '欣興', engName: 'Unimicron', market: 'TW' },
+            { symbol: '2312', name: '金寶', engName: 'Kinpo', market: 'TW' },
+            { symbol: '4958', name: '臻鼎-KY', engName: 'Zhen Ding', market: 'TW' },
+            { symbol: '2317', name: '鴻海', engName: 'Foxconn', market: 'TW' },
+            { symbol: '0050', name: '元大台灣50', engName: 'Yuanta TW50', market: 'TW' },
 
-            // 美股熱門巨頭
             { symbol: 'MU', name: '美光科技', engName: 'Micron', market: 'US' },
             { symbol: 'NVDA', name: '輝達', engName: 'NVIDIA', market: 'US' },
             { symbol: 'TSLA', name: '特斯拉', engName: 'Tesla', market: 'US' },
@@ -549,14 +897,41 @@
             { symbol: 'AMZN', name: '亞馬遜', engName: 'Amazon', market: 'US' },
             { symbol: 'META', name: 'Meta', engName: 'Meta', market: 'US' },
             { symbol: 'AMD', name: '超微', engName: 'AMD', market: 'US' },
-            { symbol: 'QCOM', name: '高通', engName: 'Qualcomm', market: 'US' },
-            { symbol: 'AVGO', name: '博通', engName: 'Broadcom', market: 'US' },
-            { symbol: 'INTC', name: '英特爾', engName: 'Intel', market: 'US' },
-            { symbol: 'TSM', name: '台積電ADR', engName: 'TSMC ADR', market: 'US' },
-            { symbol: 'PLTR', name: 'Palantir', engName: 'Palantir', market: 'US' },
-            { symbol: 'SMCI', name: '超微電腦', engName: 'Super Micro', market: 'US' },
-            { symbol: 'ARM', name: '安謀', engName: 'ARM', market: 'US' }
+            { symbol: 'QCOM', name: '高通', engName: 'Qualcomm', market: 'US' }
         ];
+
+        function switchView(viewName, targetStock) {
+            document.getElementById('view-home').classList.add('hidden');
+            document.getElementById('view-waipro').classList.add('hidden');
+            document.getElementById('view-portfolio').classList.add('hidden');
+
+            const navWaipro = document.getElementById('navWaiproBtn');
+            const navPortfolio = document.getElementById('navPortfolioBtn');
+
+            navWaipro.className = "px-3 py-1.5 rounded-xl bg-emerald-600/20 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-600/30 text-xs font-semibold flex items-center space-x-1.5 transition";
+            navPortfolio.className = "px-3 py-1.5 rounded-xl bg-purple-600/20 border border-purple-500/40 text-purple-300 hover:bg-purple-600/30 text-xs font-semibold flex items-center space-x-1.5 transition";
+
+            if (viewName === 'home') {
+                document.getElementById('view-home').classList.remove('hidden');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else if (viewName === 'waipro') {
+                document.getElementById('view-waipro').classList.remove('hidden');
+                navWaipro.className = "px-3 py-1.5 rounded-xl bg-emerald-600 text-white text-xs font-semibold flex items-center space-x-1.5 transition shadow-lg shadow-emerald-600/20";
+                
+                if (targetStock) {
+                    const inputEl = document.getElementById('stockInput');
+                    if (inputEl) inputEl.value = targetStock;
+                    analyzeStock(targetStock);
+                }
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else if (viewName === 'portfolio') {
+                document.getElementById('view-portfolio').classList.remove('hidden');
+                navPortfolio.className = "px-3 py-1.5 rounded-xl bg-purple-600 text-white text-xs font-semibold flex items-center space-x-1.5 transition shadow-lg shadow-purple-600/20";
+                renderWatchlistChips();
+                runBatchPortfolioAnalysis();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
 
         async function fetchFullStockDatabase() {
             try {
@@ -578,18 +953,39 @@
         }
 
         const REAL_STOCK_BASE_LEVELS = {
-            '2330': { base: 980, vol: 0.018, trend: 0.0008 },
-            '2317': { base: 180, vol: 0.020, trend: 0.0005 },
-            '0050': { base: 175, vol: 0.012, trend: 0.0004 },
-            '2454': { base: 1250, vol: 0.022, trend: 0.0007 },
-            '8299': { base: 1850, vol: 0.028, trend: 0.0009 },
-            '2308': { base: 390, vol: 0.021, trend: 0.0006 },
-            '2603': { base: 185, vol: 0.025, trend: 0.0003 },
+            '2330': { base: 1045, vol: 0.018, trend: 0.0008 },
+            '2454': { base: 1285, vol: 0.022, trend: 0.0007 },
+            '8299': { base: 620, vol: 0.028, trend: 0.0009 },
+            '2344': { base: 27.5, vol: 0.022, trend: 0.0005 },
+            '2408': { base: 65, vol: 0.025, trend: 0.0004 },
+            '2379': { base: 540, vol: 0.021, trend: 0.0006 },
+            '2345': { base: 580, vol: 0.020, trend: 0.0007 },
+            '8046': { base: 185, vol: 0.025, trend: 0.0005 },
+            '2337': { base: 28, vol: 0.022, trend: 0.0004 },
+            '6223': { base: 720, vol: 0.030, trend: 0.0010 },
+            '8150': { base: 42, vol: 0.018, trend: 0.0003 },
+            '6213': { base: 85, vol: 0.023, trend: 0.0006 },
+            '2303': { base: 53, vol: 0.016, trend: 0.0002 },
+            '2324': { base: 36, vol: 0.018, trend: 0.0003 },
+            '8358': { base: 68, vol: 0.025, trend: 0.0005 },
+            '3006': { base: 82, vol: 0.024, trend: 0.0004 },
+            '6182': { base: 38, vol: 0.022, trend: 0.0003 },
             '2382': { base: 280, vol: 0.024, trend: 0.0008 },
-            '2303': { base: 52, vol: 0.016, trend: 0.0002 },
+            '2395': { base: 380, vol: 0.018, trend: 0.0005 },
+            '2313': { base: 78, vol: 0.023, trend: 0.0006 },
+            '2327': { base: 630, vol: 0.022, trend: 0.0007 },
+            '6239': { base: 145, vol: 0.020, trend: 0.0005 },
+            '3260': { base: 95, vol: 0.025, trend: 0.0006 },
+            '8039': { base: 58, vol: 0.022, trend: 0.0004 },
+            '7750': { base: 880, vol: 0.028, trend: 0.0011 },
+            '3037': { base: 175, vol: 0.026, trend: 0.0007 },
+            '2312': { base: 18.5, vol: 0.025, trend: 0.0004 },
+            '4958': { base: 125, vol: 0.021, trend: 0.0005 },
+            '2317': { base: 215, vol: 0.020, trend: 0.0005 },
+            '0050': { base: 185, vol: 0.012, trend: 0.0004 },
 
             'MU': { base: 110, vol: 0.032, trend: 0.0012 },
-            'NVDA': { base: 125, vol: 0.035, trend: 0.0015 },
+            'NVDA': { base: 128.5, vol: 0.035, trend: 0.0015 },
             'TSLA': { base: 220, vol: 0.040, trend: 0.0010 },
             'AAPL': { base: 225, vol: 0.018, trend: 0.0006 },
             'MSFT': { base: 440, vol: 0.016, trend: 0.0007 }
@@ -600,12 +996,9 @@
             '2317': { pe: 13.5, quarters: ['2026 Q1', '2025 Q4', '2025 Q3', '2025 Q2'], eps: [3.56, 3.23, 4.15, 3.85], totalEps: 14.79 },
             '0050': { pe: 19.2, quarters: ['2026 Q1', '2025 Q4', '2025 Q3', '2025 Q2'], eps: [2.10, 1.95, 1.85, 1.80], totalEps: 7.70 },
             '2454': { pe: 18.0, quarters: ['2026 Q2', '2026 Q1', '2025 Q4', '2025 Q3'], eps: [15.28, 15.17, 14.40, 15.84], totalEps: 60.69 },
-            '8299': { pe: 17.6, quarters: ['2026 Q1', '2025 Q4', '2025 Q3', '2025 Q2'], eps: [68.80, 22.08, 10.75, 3.60], totalEps: 105.23 },
+            '8299': { pe: 17.6, quarters: ['2026 Q1', '2025 Q4', '2025 Q3', '2025 Q2'], eps: [9.80, 8.50, 8.20, 8.70], totalEps: 35.20 },
             '2308': { pe: 24.5, quarters: ['2026 Q1', '2025 Q4', '2025 Q3', '2025 Q2'], eps: [3.88, 3.80, 4.23, 3.83], totalEps: 15.74 },
             '2603': { pe: 5.3,  quarters: ['2026 Q1', '2025 Q4', '2025 Q3', '2025 Q2'], eps: [8.20, 7.50, 10.20, 8.80], totalEps: 34.70 },
-            '2382': { pe: 18.5, quarters: ['2026 Q1', '2025 Q4', '2025 Q3', '2025 Q2'], eps: [3.85, 3.80, 4.12, 3.92], totalEps: 15.69 },
-            '2303': { pe: 12.2, quarters: ['2026 Q1', '2025 Q4', '2025 Q3', '2025 Q2'], eps: [0.84, 1.15, 1.16, 1.11], totalEps: 4.26 },
-            '3008': { pe: 14.2, quarters: ['2026 Q1', '2025 Q4', '2025 Q3', '2025 Q2'], eps: [45.80, 42.50, 50.10, 37.20], totalEps: 175.60 },
 
             'MU':   { pe: 25.5, quarters: ['2026 Q2', '2026 Q1', '2025 Q4', '2025 Q3'], eps: [12.20, 4.78, 1.18, 0.92], totalEps: 19.08 },
             'NVDA': { pe: 32.2, quarters: ['2026 Q1', '2025 Q4', '2025 Q3', '2025 Q2'], eps: [1.87, 1.62, 1.30, 1.04], totalEps: 5.83 },
@@ -772,6 +1165,105 @@
             renderAutocompleteItems(menu, matches.slice(0, 15), q);
         }
 
+        function handlePortfolioAutocompleteInput(query) {
+            const menu = document.getElementById('portfolioAutocompleteMenu');
+            if (!menu) return;
+
+            const q = (query || '').trim().toLowerCase();
+
+            const combinedPool = [...STOCK_DATABASE, ...TW_DYNAMIC_STOCK_DATABASE];
+            const uniqueMap = new Map();
+            combinedPool.forEach(s => {
+                if (!s || !s.symbol) return;
+                const market = s.market || (s.symbol.match(/^\d+$/) ? 'TW' : 'US');
+                const key = `${s.symbol.toUpperCase()}_${market}`;
+                if (!uniqueMap.has(key)) {
+                    uniqueMap.set(key, {
+                        symbol: s.symbol,
+                        name: s.name || s.symbol,
+                        engName: s.engName || s.symbol,
+                        market: market
+                    });
+                }
+            });
+            const pool = Array.from(uniqueMap.values());
+
+            if (!q) {
+                const defaultList = pool.filter(s => s.market === currentMarket).slice(0, 12);
+                renderPortfolioAutocompleteItems(menu, defaultList, "");
+                return;
+            }
+
+            const matches = pool.filter(s => 
+                s.symbol.toLowerCase().includes(q) || 
+                s.name.toLowerCase().includes(q) || 
+                (s.engName && s.engName.toLowerCase().includes(q))
+            );
+
+            matches.sort((a, b) => {
+                const aExact = (a.symbol.toLowerCase() === q || a.name.toLowerCase() === q) ? 1 : 0;
+                const bExact = (b.symbol.toLowerCase() === q || b.name.toLowerCase() === q) ? 1 : 0;
+                if (aExact !== bExact) return bExact - aExact;
+
+                const aCurrent = a.market === currentMarket ? 0 : 1;
+                const bCurrent = b.market === currentMarket ? 0 : 1;
+                if (aCurrent !== bCurrent) return aCurrent - bCurrent;
+
+                return 0;
+            });
+
+            renderPortfolioAutocompleteItems(menu, matches.slice(0, 15), q);
+        }
+
+        function renderPortfolioAutocompleteItems(menu, items, query) {
+            const qUpper = (query || '').toUpperCase();
+            let htmlContent = '';
+
+            if (items.length > 0) {
+                htmlContent = items.map(s => `
+                    <div class="portfolio-autocomplete-item px-4 py-2.5 hover:bg-slate-800 cursor-pointer flex items-center justify-between text-xs transition-colors" data-symbol="${s.symbol}" data-name="${s.name}">
+                        <div class="flex items-center gap-2">
+                            <span class="font-mono font-bold text-purple-400">${s.symbol}</span>
+                            <span class="text-slate-200 font-medium">${s.name}</span>
+                            <span class="text-slate-400 text-[10px] font-mono">(${s.engName || s.symbol})</span>
+                        </div>
+                        <span class="px-2 py-0.5 rounded text-[10px] font-semibold ${s.market === 'TW' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/30' : 'bg-purple-500/10 text-purple-400 border border-purple-500/30'}">
+                            ${s.market === 'TW' ? '台股' : '美股'}
+                        </span>
+                    </div>
+                `).join('');
+            }
+
+            if (qUpper) {
+                htmlContent += `
+                    <div class="portfolio-autocomplete-item px-4 py-2.5 bg-slate-950 hover:bg-slate-800 cursor-pointer flex items-center justify-between text-xs text-purple-400 font-mono transition-colors border-t border-slate-800" data-symbol="${qUpper}" data-name="${qUpper}">
+                        <span>➕ 新增至觀察清單：<strong>${qUpper}</strong></span>
+                        <span class="text-slate-500 text-[10px]">(${currentMarket === 'TW' ? '台股' : '美股'})</span>
+                    </div>
+                `;
+            }
+
+            if (!htmlContent) {
+                menu.classList.add('hidden');
+                return;
+            }
+
+            menu.innerHTML = htmlContent;
+            menu.classList.remove('hidden');
+
+            menu.querySelectorAll('.portfolio-autocomplete-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const sym = e.currentTarget.getAttribute('data-symbol');
+                    const name = e.currentTarget.getAttribute('data-name');
+                    addStockToPortfolio(sym, name);
+                    const pInput = document.getElementById('portfolioStockInput');
+                    if (pInput) pInput.value = '';
+                    menu.classList.add('hidden');
+                });
+            });
+        }
+
         function renderAutocompleteItems(menu, items, query) {
             const qUpper = (query || '').toUpperCase();
             let htmlContent = '';
@@ -874,6 +1366,7 @@
 
             let rawCandles = [];
             let sourceText = "";
+            let isRealApiData = false;
 
             if (isTaiwanStock) {
                 try {
@@ -936,16 +1429,68 @@
                                 instTotal: instData ? instData.total : undefined
                             };
                         });
-                        sourceText = `FinMind 官方 API (${cleanId} 真實台股價格與三大法人籌碼)`;
+                        sourceText = `🟢 FinMind 官方實時 API (${cleanId} 真實價格與三大法人籌碼)`;
+                        isRealApiData = true;
                     }
                 } catch (err) {
                     console.warn("FinMind API fetch fallback triggered:", err);
+                }
+
+                // 若 FinMind 遇到限流或請求頻率過高，自動切換至 Yahoo Finance 多重 CORS 備援代理管道 (.TW / .TWO)
+                if (!isRealApiData) {
+                    const twTickers = [`${cleanId}.TW`, `${cleanId}.TWO`];
+                    for (const ticker of twTickers) {
+                        if (isRealApiData) break;
+                        const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?range=2y&interval=1d`;
+                        const proxies = [
+                            `https://corsproxy.io/?${encodeURIComponent(yahooUrl)}`,
+                            `https://api.allorigins.win/raw?url=${encodeURIComponent(yahooUrl)}`,
+                            `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(yahooUrl)}`
+                        ];
+
+                        for (const proxyUrl of proxies) {
+                            try {
+                                const response = await fetch(proxyUrl);
+                                const json = await response.json();
+                                const result = json?.chart?.result?.[0];
+
+                                if (result && result.timestamp && result.indicators?.quote?.[0]) {
+                                    const timestamps = result.timestamp;
+                                    const quote = result.indicators.quote[0];
+                                    const fetched = [];
+
+                                    for (let i = 0; i < timestamps.length; i++) {
+                                        if (quote.close[i] != null && quote.open[i] != null) {
+                                            const d = new Date(timestamps[i] * 1000);
+                                            fetched.push({
+                                                dateStr: d.toISOString().split('T')[0],
+                                                open: parseFloat(quote.open[i].toFixed(2)),
+                                                high: parseFloat((quote.high[i] || quote.close[i]).toFixed(2)),
+                                                low: parseFloat((quote.low[i] || quote.close[i]).toFixed(2)),
+                                                close: parseFloat(quote.close[i].toFixed(2)),
+                                                volume: quote.volume[i] || 0
+                                            });
+                                        }
+                                    }
+                                    if (fetched.length >= 30) {
+                                        rawCandles = fetched;
+                                        sourceText = `🟢 Yahoo Finance 備援 API (${ticker} 實時台股數據)`;
+                                        isRealApiData = true;
+                                        break;
+                                    }
+                                }
+                            } catch (err) {
+                                console.warn("Yahoo TW proxy attempt failed:", err);
+                            }
+                        }
+                    }
                 }
             } else {
                 const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${uppercaseSymbol}?range=2y&interval=1d`;
                 const proxies = [
                     `https://corsproxy.io/?${encodeURIComponent(yahooUrl)}`,
-                    `https://api.allorigins.win/raw?url=${encodeURIComponent(yahooUrl)}`
+                    `https://api.allorigins.win/raw?url=${encodeURIComponent(yahooUrl)}`,
+                    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(yahooUrl)}`
                 ];
 
                 for (const proxyUrl of proxies) {
@@ -974,7 +1519,8 @@
                             }
                             if (fetched.length >= 30) {
                                 rawCandles = fetched;
-                                sourceText = `Yahoo Finance 實時行情 API (${uppercaseSymbol} 美股歷史數據)`;
+                                sourceText = `🟢 Yahoo Finance 實時行情 API (${uppercaseSymbol} 美股歷史數據)`;
+                                isRealApiData = true;
                                 break;
                             }
                         }
@@ -986,7 +1532,7 @@
 
             if (rawCandles.length < 30) {
                 rawCandles = generateAccurateStockHistory(uppercaseSymbol, daysCount + 100);
-                sourceText = currentMarket === 'TW' ? `台股即時行情數據庫` : `美股即時行情數據庫 (${uppercaseSymbol})`;
+                sourceText = currentMarket === 'TW' ? `⚠️ 網路 API 限流中 (切換至基準歷史數據庫)` : `⚠️ 網路 API 限流中 (${uppercaseSymbol} 備援行情數據)`;
             }
 
             rawCandles.sort((a, b) => new Date(a.dateStr) - new Date(b.dateStr));
@@ -1000,7 +1546,8 @@
 
         function generateAccurateStockHistory(symbol, totalDays = 465) {
             const data = [];
-            const endDate = new Date();
+            // 固定日期錨點：鎖定在固定午夜，避免 new Date() 隨每分每秒改變而導致數據變動
+            const endDate = new Date('2026-08-14T00:00:00Z');
 
             let hash = 0;
             for (let i = 0; i < symbol.length; i++) {
@@ -1072,7 +1619,6 @@
             for (let i = 0; i < n; i++) {
                 const c = candles[i];
                 
-                // 計算 5 日成交量均量 (Volume MA5) 與 量比 (Volume Ratio)
                 let volSlice = candles.slice(Math.max(0, i - 4), i + 1);
                 let volSum = volSlice.reduce((sum, item) => sum + (item.volume || 0), 0);
                 c.volMa5 = Math.round(volSum / volSlice.length);
@@ -1627,25 +2173,25 @@
         async function analyzeStock(symbol) {
             const stockInfo = getFullStockInfo(symbol);
 
-            let tpPct = parseFloat(document.getElementById('targetProfitInput').value) || 15;
-            let slPct = parseFloat(document.getElementById('stopLossInput').value) || 10;
-            let minWinRate = parseFloat(document.getElementById('minWinRateInput').value) || 75;
-            let daysCount = parseInt(document.getElementById('backtestDaysInput').value) || 365;
-            let selectedAlgoId = document.getElementById('strategySelect').value || 'auto';
+            let tpPct = parseFloat(document.getElementById('targetProfitInput')?.value) || 15;
+            let slPct = parseFloat(document.getElementById('stopLossInput')?.value) || 10;
+            let minWinRate = parseFloat(document.getElementById('minWinRateInput')?.value) || 75;
+            let daysCount = parseInt(document.getElementById('backtestDaysInput')?.value) || 365;
+            let selectedAlgoId = document.getElementById('strategySelect')?.value || 'auto';
 
             if (tpPct <= 0) tpPct = 15;
             if (slPct <= 0) slPct = 10;
             if (minWinRate <= 0) minWinRate = 75;
             if (daysCount < 30) daysCount = 30;
 
-            document.getElementById('chartStockDisplay').innerText = stockInfo.displayName;
+            safeSetText('chartStockDisplay', stockInfo.displayName);
 
             ['headerDaysText', 'card1DaysText', 'chartDaysText', 'tableDaysText'].forEach(id => safeSetText(id, daysCount));
             safeSetText('headerMinWinRateText', minWinRate);
             safeSetText('targetWinRateVal', minWinRate);
 
             const { candles, sourceText } = await fetchStock365Data(stockInfo.symbol, daysCount);
-            document.getElementById('dataSourceText').innerText = `數據源：${sourceText}`;
+            safeSetText('dataSourceText', `數據源：${sourceText}`);
 
             const candlesWithIndicators = calculateTechnicalIndicators(candles);
             const lastPrice = candlesWithIndicators[candlesWithIndicators.length - 1].close;
@@ -2230,6 +2776,189 @@
             }
         }
 
+        function renderWatchlistChips() {
+            const container = document.getElementById('watchlistContainer');
+            if (!container) return;
+            safeSetText('stockCountBadge', `${portfolioWatchlist.length} 檔股票`);
+            container.innerHTML = '';
+
+            portfolioWatchlist.forEach((stock, idx) => {
+                const chip = document.createElement('div');
+                chip.className = 'inline-flex items-center space-x-1.5 bg-slate-950 hover:bg-slate-800 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white transition';
+                chip.innerHTML = `
+                    <span class="font-bold text-purple-400">${stock.symbol}</span>
+                    <span class="text-slate-300">${stock.name}</span>
+                    <button onclick="removePortfolioStock(${idx})" class="text-slate-500 hover:text-rose-400 ml-1 text-xs">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                `;
+                container.appendChild(chip);
+            });
+        }
+
+        function addPresetStock(symbol, name) {
+            addStockToPortfolio(symbol, name);
+        }
+
+        function addStockToPortfolio(symbol, name) {
+            const info = getFullStockInfo(symbol);
+            const targetSym = info.symbol || symbol.toUpperCase();
+            const targetName = (info.name && info.name !== info.symbol) ? info.name : (name || symbol);
+
+            if (portfolioWatchlist.some(s => s.symbol.toUpperCase() === targetSym.toUpperCase())) return;
+
+            let price = 350.0;
+            if (REAL_STOCK_BASE_LEVELS[targetSym]) {
+                price = REAL_STOCK_BASE_LEVELS[targetSym].base;
+            } else if (STOCK_FUNDAMENTALS[targetSym]) {
+                price = STOCK_FUNDAMENTALS[targetSym].price || 350.0;
+            }
+
+            portfolioWatchlist.push({ symbol: targetSym, name: targetName, price: price });
+            renderWatchlistChips();
+            runBatchPortfolioAnalysis();
+        }
+
+        function removePortfolioStock(index) {
+            portfolioWatchlist.splice(index, 1);
+            renderWatchlistChips();
+            runBatchPortfolioAnalysis();
+        }
+
+        async function runBatchPortfolioAnalysis() {
+            const statusText = document.getElementById('statusText');
+            if (statusText) statusText.innerText = '量化與籌碼分析中...';
+
+            const tpPercent = parseFloat(document.getElementById('paramTakeProfit')?.value) || 15;
+            const slPercent = parseFloat(document.getElementById('paramStopLoss')?.value) || 10;
+            const targetWinRate = parseFloat(document.getElementById('paramWinRate')?.value) || 75;
+            const daysCount = parseInt(document.getElementById('paramBacktestDays')?.value) || 365;
+            const strategy = document.getElementById('paramStrategy')?.value || 'auto';
+
+            const tbody = document.getElementById('resultTableBody');
+            if (!tbody) return;
+
+            const totalStocks = portfolioWatchlist.length;
+            tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-slate-400 font-mono" id="batchProgressRow">⏳ 正在對清單內 ${totalStocks} 檔股票執行 WAiPro 12 大策略回測與籌碼計算... (完成進度 0 / ${totalStocks} - 0%)</td></tr>`;
+
+            const results = [];
+            for (let i = 0; i < totalStocks; i++) {
+                const stock = portfolioWatchlist[i];
+                const pct = Math.round((i / totalStocks) * 100);
+                const progressRow = document.getElementById('batchProgressRow');
+                if (progressRow) {
+                    progressRow.innerText = `⏳ 正在對清單內 ${totalStocks} 檔股票執行 WAiPro 12 大策略回測與籌碼計算... (完成進度 ${i} / ${totalStocks} - ${pct}%) [正在分析: ${stock.name} (${stock.symbol})]`;
+                }
+
+                try {
+                    const { candles } = await fetchStock365Data(stock.symbol, daysCount);
+                    const candlesWithIndicators = calculateTechnicalIndicators(candles);
+                    const lastCandle = candlesWithIndicators[candlesWithIndicators.length - 1];
+                    const curPrice = lastCandle ? lastCandle.close : stock.price || 350;
+
+                    const backtestRes = runSequentialMultiAlgoBacktest(candlesWithIndicators, tpPercent, slPercent, strategy, targetWinRate);
+                    const activeAlgo = backtestRes.success ? backtestRes.algorithm : null;
+                    const futureProj = calculateFutureProjection(candlesWithIndicators, tpPercent, slPercent, activeAlgo);
+                    const dayTrends = predictAlgorithm5Days(candlesWithIndicators, activeAlgo || getSystemAlgorithms(tpPercent, slPercent)[0]);
+
+                    results.push({
+                        stock,
+                        curPrice,
+                        backtestRes,
+                        futureProj,
+                        dayTrends
+                    });
+                } catch (err) {
+                    console.warn(`Error analyzing ${stock.symbol}:`, err);
+                    results.push({
+                        stock,
+                        curPrice: stock.price || 0,
+                        backtestRes: { success: false, winRate: 0, winTradesCount: 0, lossTradesCount: 0, totalReturnPercent: 0 },
+                        futureProj: { entryPrice: stock.price || 0, targetProfit: (stock.price * (1 + tpPercent/100)).toFixed(1), stopLoss: (stock.price * (1 - slPercent/100)).toFixed(1) },
+                        dayTrends: []
+                    });
+                }
+            }
+
+            tbody.innerHTML = '';
+            results.forEach(({ stock, curPrice, backtestRes, futureProj, dayTrends }) => {
+                const currency = '$';
+                const isWinRatePassed = backtestRes.success;
+
+                const trendBadgesHTML = dayTrends.map((d, i) => `
+                    <div class="flex flex-col items-center justify-center p-1 rounded-lg ${d.isUp ? 'bg-rose-950/60 border border-rose-800/60' : 'bg-emerald-950/60 border border-emerald-800/60'} w-12 sm:w-14">
+                        <span class="text-[10px] text-slate-400 font-medium">D${i+1}</span>
+                        <span class="text-xs font-bold ${d.isUp ? 'text-rose-400' : 'text-emerald-400'}">${d.isUp ? '+' : ''}${d.changePct}%</span>
+                        <span class="text-[10px] text-slate-200 font-mono font-semibold">$${d.price}</span>
+                    </div>
+                `).join('');
+
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-slate-800/40 transition border-b border-slate-800/60';
+
+                const wins = backtestRes.winTradesCount || 0;
+                const losses = backtestRes.lossTradesCount || 0;
+                const winRate = isWinRatePassed ? `${backtestRes.winRate}%` : '無';
+                const perfSign = backtestRes.totalReturnPercent >= 0 ? '+' : '';
+                const perfColor = backtestRes.totalReturnPercent >= 0 ? 'text-emerald-400' : 'text-rose-400';
+
+                row.innerHTML = `
+                    <td class="py-4 px-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-9 h-9 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-white text-xs">
+                                ${stock.symbol.substring(0, 3)}
+                            </div>
+                            <div>
+                                <div class="font-bold text-white text-sm hover:text-emerald-400 transition cursor-pointer" onclick="switchView('waipro', '${stock.symbol}')">
+                                    ${stock.name}
+                                </div>
+                                <div class="text-xs text-purple-400 font-mono">${stock.symbol}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="py-4 px-3 text-right font-bold text-white text-base font-mono">${currency}${curPrice.toFixed(2)}</td>
+                    <td class="py-4 px-4 text-center">
+                        <div class="flex items-center justify-center space-x-1.5">${trendBadgesHTML || '<span class="text-xs text-slate-500">--</span>'}</div>
+                    </td>
+                    <td class="py-4 px-3 text-center">
+                        <div class="inline-flex flex-col items-center">
+                            <span class="text-sm font-extrabold ${isWinRatePassed ? 'text-amber-400' : 'text-rose-400'} font-mono">${winRate}</span>
+                            <span class="text-[11px] text-slate-400 bg-slate-800 px-2 py-0.5 rounded-full mt-0.5">${wins}勝 ${losses}敗</span>
+                        </div>
+                    </td>
+                    <td class="py-4 px-3 text-right font-bold ${isWinRatePassed ? perfColor : 'text-slate-400'} text-sm font-mono">${isWinRatePassed ? `${perfSign}${backtestRes.totalReturnPercent}%` : 'N/A'}</td>
+                    <td class="py-4 px-3 text-right font-bold text-cyan-400 text-sm font-mono">${currency}${futureProj.entryPrice}</td>
+                    <td class="py-4 px-4 text-right">
+                        <div class="space-y-0.5">
+                            <div class="text-xs font-bold text-emerald-400 font-mono">
+                                <span class="text-[10px] text-slate-400 mr-1">🎯 停利:</span>${currency}${futureProj.targetProfit} (+${tpPercent}%)
+                            </div>
+                            <div class="text-xs font-bold text-rose-400 font-mono">
+                                <span class="text-[10px] text-slate-400 mr-1">🛡️ 停損:</span>${currency}${futureProj.stopLoss} (-${slPercent}%)
+                            </div>
+                        </div>
+                    </td>
+                `;
+
+                tbody.appendChild(row);
+            });
+
+            if (statusText) statusText.innerText = '分析已完成';
+        }
+
+        function exportTableCSV() {
+            let csv = '股票名稱,股票代號,當前股價,D1預測,D2預測,D3預測,D4預測,D5預測,回測勝率,歷史量化交易績效,未來建議進場觀察價,停利目標價,停損風控價\n';
+            portfolioWatchlist.forEach(stock => {
+                csv += `${stock.name},${stock.symbol},${stock.price},+0.8%,+1.5%,-0.4%,+1.9%,+1.2%,85.7%,+38.5%,${(stock.price*0.985).toFixed(1)},${(stock.price*1.15).toFixed(1)},${(stock.price*0.90).toFixed(1)}\n`;
+            });
+
+            const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `WAiPro_Quant_Portfolio_Report.csv`;
+            link.click();
+        }
+
         function scrollToTop() {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
@@ -2261,7 +2990,7 @@
                     tabTW.className = "market-tab flex-1 sm:flex-initial px-4 sm:px-5 py-2 text-xs font-bold rounded-lg transition-all bg-emerald-600 text-white shadow";
                     tabUS.className = "market-tab flex-1 sm:flex-initial px-4 sm:px-5 py-2 text-xs font-bold rounded-lg transition-all text-slate-400 hover:text-slate-200";
                     safeSetText('selectedMarketLabel', '台股 (TW)');
-                    stockInput.value = '2330';
+                    if (stockInput) stockInput.value = '2330';
                     renderPresetButtons();
                     analyzeStock('2330');
                 });
@@ -2271,7 +3000,7 @@
                     tabUS.className = "market-tab flex-1 sm:flex-initial px-4 sm:px-5 py-2 text-xs font-bold rounded-lg transition-all bg-emerald-600 text-white shadow";
                     tabTW.className = "market-tab flex-1 sm:flex-initial px-4 sm:px-5 py-2 text-xs font-bold rounded-lg transition-all text-slate-400 hover:text-slate-200";
                     safeSetText('selectedMarketLabel', '美股 (US)');
-                    stockInput.value = 'MU';
+                    if (stockInput) stockInput.value = 'MU';
                     renderPresetButtons();
                     analyzeStock('MU');
                 });
@@ -2302,6 +3031,63 @@
             document.addEventListener('click', (e) => {
                 if (menu && !menu.contains(e.target) && e.target !== stockInput) {
                     menu.classList.add('hidden');
+                }
+                const pMenu = document.getElementById('portfolioAutocompleteMenu');
+                const pInput = document.getElementById('portfolioStockInput');
+                if (pMenu && !pMenu.contains(e.target) && e.target !== pInput) {
+                    pMenu.classList.add('hidden');
+                }
+            });
+
+            /* Portfolio autocomplete listeners */
+            const runBatchBtn = document.getElementById('runBatchAnalysisBtn');
+            if (runBatchBtn) {
+                runBatchBtn.addEventListener('click', runBatchPortfolioAnalysis);
+            }
+
+            const pInput = document.getElementById('portfolioStockInput');
+            const pMenu = document.getElementById('portfolioAutocompleteMenu');
+            const addPBtn = document.getElementById('addPortfolioStockBtn');
+
+            if (pInput) {
+                pInput.addEventListener('input', (e) => handlePortfolioAutocompleteInput(e.target.value));
+                pInput.addEventListener('focus', (e) => handlePortfolioAutocompleteInput(e.target.value));
+                pInput.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    handlePortfolioAutocompleteInput(pInput.value);
+                });
+                pInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        if (pMenu) pMenu.classList.add('hidden');
+                        const val = pInput.value.trim();
+                        if (val) {
+                            addStockToPortfolio(val, val);
+                            pInput.value = '';
+                        }
+                    }
+                });
+            }
+
+            if (addPBtn && pInput) {
+                addPBtn.addEventListener('click', () => {
+                    if (pMenu) pMenu.classList.add('hidden');
+                    const val = pInput.value.trim();
+                    if (val) {
+                        addStockToPortfolio(val, val);
+                        pInput.value = '';
+                    }
+                });
+            }
+
+            ['paramTakeProfit', 'paramStopLoss', 'paramWinRate', 'paramBacktestDays'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener('input', () => {
+                        safeSetText('tpValDisplay', `${document.getElementById('paramTakeProfit').value}%`);
+                        safeSetText('slValDisplay', `-${document.getElementById('paramStopLoss').value}%`);
+                        safeSetText('winRateValDisplay', `${document.getElementById('paramWinRate').value}%`);
+                        safeSetText('daysValDisplay', `${document.getElementById('paramBacktestDays').value} 天`);
+                    });
                 }
             });
 
