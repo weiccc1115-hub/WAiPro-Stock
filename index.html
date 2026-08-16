@@ -148,8 +148,24 @@
                     <div class="absolute -right-12 -bottom-12 w-48 h-48 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all"></div>
                     <div>
                         <div class="flex items-center justify-between mb-6">
-                            <div class="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-2xl group-hover:scale-110 transition-transform">
-                                <i class="fa-solid fa-chart-candlestick"></i>
+                            <div class="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform">
+                                <svg class="w-8 h-8 text-emerald-400" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <!-- Candle 1 -->
+                                    <path d="M6 5V27" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                    <rect x="4" y="11" width="4" height="11" rx="1" fill="currentColor"/>
+                                    <!-- Candle 2 -->
+                                    <path d="M12 3V23" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                    <rect x="10" y="6" width="4" height="10" rx="1" fill="currentColor"/>
+                                    <!-- Candle 3 -->
+                                    <path d="M18 7V25" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                    <rect x="16" y="10" width="4" height="10" rx="1" fill="currentColor"/>
+                                    <!-- Candle 4 (Hollow) -->
+                                    <path d="M23 9V23" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                    <rect x="21" y="12" width="4" height="6" rx="1" fill="#0b0f19" stroke="currentColor" stroke-width="1.5"/>
+                                    <!-- Candle 5 -->
+                                    <path d="M28 4V28" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                    <rect x="26" y="8" width="4" height="14" rx="1" fill="currentColor"/>
+                                </svg>
                             </div>
                             <span class="text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-3 py-1 rounded-full font-medium">單股深度分析</span>
                         </div>
@@ -822,6 +838,7 @@
         let stockChartInstance = null;
         let rsiChartInstance = null;
         let TW_DYNAMIC_STOCK_DATABASE = [];
+        let lastBatchResults = [];
 
         /* Portfolio Watchlist Default Items (28 Specified Stocks) */
         let portfolioWatchlist = [
@@ -2856,6 +2873,7 @@
                     const lastCandle = candlesWithIndicators[candlesWithIndicators.length - 1];
                     const curPrice = lastCandle ? lastCandle.close : stock.price || 350;
 
+                    const fundamentals = await fetchDynamicEPS(stock.symbol, curPrice);
                     const backtestRes = runSequentialMultiAlgoBacktest(candlesWithIndicators, tpPercent, slPercent, strategy, targetWinRate);
                     const activeAlgo = backtestRes.success ? backtestRes.algorithm : null;
                     const futureProj = calculateFutureProjection(candlesWithIndicators, tpPercent, slPercent, activeAlgo);
@@ -2866,27 +2884,41 @@
                         curPrice,
                         backtestRes,
                         futureProj,
-                        dayTrends
+                        dayTrends,
+                        fundamentals
                     });
                 } catch (err) {
                     console.warn(`Error analyzing ${stock.symbol}:`, err);
+                    const fundamentals = getStockFundamentals(stock.symbol, stock.price || 350);
                     results.push({
                         stock,
                         curPrice: stock.price || 0,
                         backtestRes: { success: false, winRate: 0, winTradesCount: 0, lossTradesCount: 0, totalReturnPercent: 0 },
                         futureProj: { entryPrice: stock.price || 0, targetProfit: (stock.price * (1 + tpPercent/100)).toFixed(1), stopLoss: (stock.price * (1 - slPercent/100)).toFixed(1) },
-                        dayTrends: []
+                        dayTrends: [],
+                        fundamentals
                     });
                 }
             }
 
             tbody.innerHTML = '';
-            results.forEach(({ stock, curPrice, backtestRes, futureProj, dayTrends }) => {
+            results.forEach(({ stock, curPrice, backtestRes, futureProj, dayTrends, fundamentals }) => {
                 const currency = '$';
                 const isWinRatePassed = backtestRes.success;
 
+                const dynamicPe = fundamentals && fundamentals.totalEps > 0 ? parseFloat((curPrice / fundamentals.totalEps).toFixed(1)) : 15.0;
+                let peEval = "合理估值";
+                let peEvalClass = "text-emerald-400";
+                if (dynamicPe < 15) {
+                    peEval = "價值偏低 (低估)";
+                    peEvalClass = "text-cyan-400";
+                } else if (dynamicPe > 35) {
+                    peEval = "高成長 / 高估值";
+                    peEvalClass = "text-amber-400";
+                }
+
                 const trendBadgesHTML = dayTrends.map((d, i) => `
-                    <div class="flex flex-col items-center justify-center p-1 rounded-lg ${d.isUp ? 'bg-rose-950/60 border border-rose-800/60' : 'bg-emerald-950/60 border border-emerald-800/60'} w-12 sm:w-14">
+                    <div class="flex flex-col items-center justify-center p-1 rounded-lg ${d.isUp ? 'bg-rose-950/60 border border-rose-800/60' : 'bg-emerald-950/60 border border-emerald-800/60'} w-14 sm:w-16">
                         <span class="text-[10px] text-slate-400 font-medium">D${i+1}</span>
                         <span class="text-xs font-bold ${d.isUp ? 'text-rose-400' : 'text-emerald-400'}">${d.isUp ? '+' : ''}${d.changePct}%</span>
                         <span class="text-[10px] text-slate-200 font-mono font-semibold">$${d.price}</span>
@@ -2916,7 +2948,10 @@
                             </div>
                         </div>
                     </td>
-                    <td class="py-4 px-3 text-right font-bold text-white text-base font-mono">${currency}${curPrice.toFixed(2)}</td>
+                    <td class="py-4 px-3 text-right">
+                        <div class="font-bold text-white text-base font-mono">${currency}${curPrice.toFixed(2)}</div>
+                        <div class="text-[10px] ${peEvalClass} font-semibold">${peEval}</div>
+                    </td>
                     <td class="py-4 px-4 text-center">
                         <div class="flex items-center justify-center space-x-1.5">${trendBadgesHTML || '<span class="text-xs text-slate-500">--</span>'}</div>
                     </td>
@@ -2943,19 +2978,61 @@
                 tbody.appendChild(row);
             });
 
+            lastBatchResults = results;
             if (statusText) statusText.innerText = '分析已完成';
         }
 
         function exportTableCSV() {
-            let csv = '股票名稱,股票代號,當前股價,D1預測,D2預測,D3預測,D4預測,D5預測,回測勝率,歷史量化交易績效,未來建議進場觀察價,停利目標價,停損風控價\n';
-            portfolioWatchlist.forEach(stock => {
-                csv += `${stock.name},${stock.symbol},${stock.price},+0.8%,+1.5%,-0.4%,+1.9%,+1.2%,85.7%,+38.5%,${(stock.price*0.985).toFixed(1)},${(stock.price*1.15).toFixed(1)},${(stock.price*0.90).toFixed(1)}\n`;
-            });
+            const tpPercent = parseFloat(document.getElementById('paramTakeProfit')?.value) || 15;
+            const slPercent = parseFloat(document.getElementById('paramStopLoss')?.value) || 10;
+            const winRate = parseFloat(document.getElementById('paramWinRate')?.value) || 60;
+            const daysCount = parseInt(document.getElementById('paramBacktestDays')?.value) || 90;
+            const stratSelect = document.getElementById('paramStrategy');
+            const stratText = stratSelect ? (stratSelect.options[stratSelect.selectedIndex]?.text || stratSelect.value) : '自動歷史量化交易績效最佳';
+
+            let csv = `"分析參數：目標停利 ${tpPercent}% | 風控停損 -${slPercent}% | 目標勝率門檻 ${winRate}% | 歷史回測天數 ${daysCount}天 | 策略模式：${stratText}"\n`;
+            csv += '股票名稱,股票代號,當前股價,D1預測,D2預測,D3預測,D4預測,D5預測,回測勝率,歷史量化交易績效,未來建議進場觀察價,停利目標價,停損風控價\n';
+
+            if (lastBatchResults && lastBatchResults.length > 0) {
+                lastBatchResults.forEach(({ stock, curPrice, backtestRes, futureProj, dayTrends, fundamentals }) => {
+                    const dCols = [];
+                    for (let i = 0; i < 5; i++) {
+                        if (dayTrends && dayTrends[i]) {
+                            const d = dayTrends[i];
+                            const sign = d.changePct >= 0 ? '+' : '';
+                            dCols.push(`${sign}${d.changePct}% ($${d.price})`);
+                        } else {
+                            dCols.push('--');
+                        }
+                    }
+
+                    const dynamicPe = fundamentals && fundamentals.totalEps > 0 ? parseFloat((curPrice / fundamentals.totalEps).toFixed(1)) : 15.0;
+                    let peEval = "合理估值";
+                    if (dynamicPe < 15) {
+                        peEval = "價值偏低 (低估)";
+                    } else if (dynamicPe > 35) {
+                        peEval = "高成長 / 高估值";
+                    }
+
+                    const priceEvalStr = `"$${curPrice.toFixed(2)} (${peEval})"`;
+                    const winRateStr = backtestRes.success ? `${backtestRes.winRate}% (${backtestRes.winTradesCount}勝 ${backtestRes.lossTradesCount}敗)` : '無';
+                    const perfSign = backtestRes.totalReturnPercent >= 0 ? '+' : '';
+                    const perfStr = backtestRes.success ? `${perfSign}${backtestRes.totalReturnPercent}%` : 'N/A';
+
+                    csv += `${stock.name},${stock.symbol},${priceEvalStr},${dCols[0]},${dCols[1]},${dCols[2]},${dCols[3]},${dCols[4]},"${winRateStr}",${perfStr},${futureProj.entryPrice},${futureProj.targetProfit},${futureProj.stopLoss}\n`;
+                });
+            } else {
+                portfolioWatchlist.forEach(stock => {
+                    const curP = stock.price || 100;
+                    csv += `${stock.name},${stock.symbol},"$${curP.toFixed(2)} (合理估值)",+0.0% ($${curP.toFixed(2)}),+0.0% ($${curP.toFixed(2)}),+0.0% ($${curP.toFixed(2)}),+0.0% ($${curP.toFixed(2)}),+0.0% ($${curP.toFixed(2)}),--,N/A,${(curP*0.985).toFixed(2)},${(curP*(1+tpPercent/100)).toFixed(2)},${(curP*(1-slPercent/100)).toFixed(2)}\n`;
+                });
+            }
 
             const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = `WAiPro_Quant_Portfolio_Report.csv`;
+            const todayStr = new Date().toISOString().split('T')[0];
+            link.download = `WAiPro_Report_${todayStr}.csv`;
             link.click();
         }
 
